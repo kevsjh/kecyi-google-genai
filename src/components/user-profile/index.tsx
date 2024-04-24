@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { use, useEffect } from "react";
 import { CompleteSignInDialog } from "./complete-signin-dialog";
 import { createUrl } from "@/lib/utils";
+import UserDropdown from "./user-dropdown";
 
 
 
@@ -51,7 +52,7 @@ export default function UserProfile() {
             <CompleteSignInDialog />
             {
                 auth.currentUser ?
-                    <></> :
+                    <UserDropdown /> :
                     <LoginDialog />
             }
         </>

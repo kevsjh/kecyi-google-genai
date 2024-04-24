@@ -45,9 +45,7 @@ export async function loadPDFAction({ objectFullPath, objectURL, uid }: { uid: s
 
         const userFilename = customMetadata?.filename
 
-        const loader = new PDFLoader(inputFilePath, {
-
-        });
+        const loader = new PDFLoader(inputFilePath,);
         const docs: IdDocument[] = await loader.load();
         // update metadata from standard pdf loader
         // use vector store doc type to set doc id
