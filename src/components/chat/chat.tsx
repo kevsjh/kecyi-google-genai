@@ -2,15 +2,11 @@
 
 import { ChatList } from './chat-list'
 import { ChatPanel } from './chat-panel'
-import { EmptyScreen } from './empty-screen'
-import { ListFlights } from '@/components/flights/list-flights'
-import { ListHotels } from '@/components/hotels/list-hotels'
+
 import { useLocalStorage } from '@/hooks/use-local-storage'
 import { useScrollAnchor } from '@/hooks/use-scroll-anchor'
 import { Message, StockAgentAI } from '@/lib/chat/stock-agent-ai-actions'
 
-
-import { AIProvider, Session } from '@/types'
 import { cn, createUrl, } from '@/lib/utils'
 import { useAIState, useStreamableValue, useUIState } from 'ai/rsc'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'

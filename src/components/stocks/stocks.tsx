@@ -2,7 +2,7 @@
 
 import { useActions, useUIState } from 'ai/rsc'
 
-import type { AI } from '@/lib/chat/stock-agent-ai-actions'
+import type { StockAgentAI } from '@/lib/chat/stock-agent-ai-actions'
 
 export interface IStock {
   symbol: string
@@ -14,7 +14,7 @@ export interface IStock {
 }
 
 export function Stocks({ props: stocks }: { props: IStock[] }) {
-  const [, setMessages] = useUIState<typeof AI>()
+  const [, setMessages] = useUIState<typeof StockAgentAI>()
   const { submitUserMessage } = useActions()
 
   return (
