@@ -65,6 +65,7 @@ export default function FeatureSection() {
                         </p>
                     </div>
                     <div className="">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             className="h-full w-full aspect-[4/3] object-cover  shadow-md"
                             src="/assets/feature/interior.png"
