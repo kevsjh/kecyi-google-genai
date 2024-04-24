@@ -58,7 +58,7 @@ export default function FeatureSection() {
                         <p className="text-base md:text-lg">
 
                             Generate Stunning & Unique Design Ideas: In seconds, newroom.io creates multiple,
-                            inspiring design concepts tailored to your client's preferences and style.
+                            inspiring design concepts tailored to your client&apos;s preferences and style.
                             <br /><br />Go beyond generic options and impress them with fresh possibilities.
                             <br /> <br />Save Valuable Time & Focus on What Matters: Free yourself from tedious initial design phases.
                             newroom.io jumpstarts your workflow, allowing you to dedicate more time to refining details and building strong client relationships.
@@ -132,7 +132,7 @@ export default function FeatureSection() {
                             Unlock Business Potential
                         </p>
                         <p className="text-base md:text-lg">
-                            Move beyond the ordinary: Ditch generic layouts and create a space that's as unique as your brand.
+                            Move beyond the ordinary: Ditch generic layouts and create a space that&apos;s as unique as your brand.
                             <br />
                             <br />
                             Leverage our AI tools to help you design an experience that resonate with your customers, leaving a lasting impression.

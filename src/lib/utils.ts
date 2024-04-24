@@ -152,7 +152,7 @@ export function firestoreAutoId(): string {
   let id = '';
   while (id.length < 20) {
     const bytes = randomBytes(40);
-    // eslint-disable-next-line @typescript-eslint/no-loop-func
+
     bytes.forEach(b => {
       // Length of `chars` is 62. We only take bytes between 0 and 62*4-1
       // (both inclusive). The value is then evenly mapped to indices of `char`

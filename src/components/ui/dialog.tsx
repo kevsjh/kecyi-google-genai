@@ -56,6 +56,7 @@ DialogContent.displayName = DialogPrimitive.Content.displayName
 
 
 
+// eslint-disable-next-line react/display-name
 const DialogContentWithoutCross = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>

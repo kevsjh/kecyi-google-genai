@@ -41,7 +41,7 @@ export class VectorStoreDocumentDataPoint {
 
     getStringArrays(
         prefix: string,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         m: Record<string, any>
     ): Record<string, string[]> {
         let ret: Record<string, string[]> = {};
@@ -95,7 +95,7 @@ export class VectorStoreDocumentDataPoint {
     }
 
     metadataToRestrictions(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         documentMetadata: Record<string, any>
     ): Restriction[] {
 

@@ -21,7 +21,7 @@ export default function FAQ() {
         <AccordionItem value="item-2">
             <AccordionTrigger>How does newroom.io works</AccordionTrigger>
             <AccordionContent>
-                Newroom.io let's you upload photos of your interior design, select style and redesign it.
+                Newroom.io let&apos;s you upload photos of your interior design, select style and redesign it.
                 Beyond that, we also offer a whole suite of tools to help you with your interior design projects.
             </AccordionContent>
         </AccordionItem>
@@ -71,7 +71,7 @@ export default function FAQ() {
                 Unfortunately, we are not able to offer refunds as the cost for AI image generation are extremly high.
                 However, you can cancel your subscription at any time, and you will not be charged again.
                 Your subscription will remain active until the end of the billing cycle.
-                If there's anything we can do to help, please let us know.
+                If there&apos;s anything we can do to help, please let us know.
             </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-9">
