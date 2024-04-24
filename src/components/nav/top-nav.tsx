@@ -2,8 +2,7 @@ import Link from "next/link";
 import { Icons } from "../icon";
 import UserProfile from "../user-profile";
 import { Suspense } from "react";
-import UserCreditDisplay from "../user-profile/user-credit";
-import UserPlanDisplay from "../user-profile/user-plan-display";
+
 
 
 export default function TopNav() {
@@ -21,7 +20,7 @@ export default function TopNav() {
 
                     <Suspense  >
                         {/* <div className="hidden md:inline-block ">  <UserPlanDisplay /></div> */}
-                        <div className="hidden md:inline-block"> <UserCreditDisplay /></div>
+
                         <UserProfile />
                     </Suspense>
 

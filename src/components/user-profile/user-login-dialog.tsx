@@ -32,7 +32,7 @@ import { useAuthContext } from "@/context/auth-context"
 import { GithubAuthProvider, GoogleAuthProvider, signInWithPopup } from "firebase/auth"
 import { set } from "firebase/database"
 import { toast } from "sonner"
-import UserDropdown from "./user-dropdown"
+
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { CompleteSignInDialog } from "./complete-signin-dialog"
 

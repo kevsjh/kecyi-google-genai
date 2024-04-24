@@ -2,7 +2,7 @@
 
 import { AuthContextProvider, useAuthContext } from "@/context/auth-context";
 import LoginDialog, { UserLoginDialog } from "./user-login-dialog";
-import UserDropdown from "./user-dropdown";
+
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { use, useEffect } from "react";
 import { CompleteSignInDialog } from "./complete-signin-dialog";
@@ -51,7 +51,7 @@ export default function UserProfile() {
             <CompleteSignInDialog />
             {
                 auth.currentUser ?
-                    <UserDropdown /> :
+                    <></> :
                     <LoginDialog />
             }
         </>
