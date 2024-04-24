@@ -30,7 +30,7 @@ export default async function queryVectorSearch({ query, uid, allowDefaultQuery 
                     projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
                     type: 'service_account',
                     "client_email": process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-                    "private_key": process.env.FIREBASE_ADMIN_PRIVATE_KEY,
+                    "private_key": process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/gm, "\n"),
                 }
             },
         });
