@@ -1,11 +1,12 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { firebaseAdminAuth, firebaseAdminFirestore } from '@/config/firebase-admin-config'
+import { firebaseAdminAuth, firebaseAdminFirestore, initFirebaseAdminApp } from '@/config/firebase-admin-config'
 import { IUserStockPortfolio, IUserTransaction, Session } from '@/types'
 import { FieldValue } from 'firebase-admin/firestore'
 
 
+initFirebaseAdminApp()
 
 export async function getAuthByCookie(): Promise<Session | undefined> {
     try {

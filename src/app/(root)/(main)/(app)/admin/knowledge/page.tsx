@@ -1,6 +1,11 @@
+import { getUseAdminKnowledge } from "@/lib/auth/admin-action";
 import { AddContentDialog } from "./components/add-content-dialog";
 
-export default function Page() {
+export default async function Page() {
+
+    const res = await getUseAdminKnowledge()
+
+
     return <div className="flex  flex-col h-full p-6   w-full">
         <div className="flex items-center justify-between"><h1 className="text-3xl font-semibold">Knowledge Hub</h1>
             <AddContentDialog />
