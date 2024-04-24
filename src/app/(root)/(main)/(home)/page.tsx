@@ -31,15 +31,7 @@ export default function Home() {
         <AccessPortalButton />
 
       </div>
-      <div id="collection" className="py-6 w-full">
-        <CollectionShowcase />
-      </div>
-      <div id="feature" className="w-full py-4">
-        <FeatureSection />
-      </div>
-      <div id="review" className="pt-4 pb-10">
-        <UserReviewShowcase />
-      </div>
+
     </main>
   );
 }
