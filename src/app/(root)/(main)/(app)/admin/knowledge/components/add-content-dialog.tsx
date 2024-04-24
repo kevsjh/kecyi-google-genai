@@ -34,6 +34,7 @@ import { toast } from "sonner"
 import { loadPDFAction } from "@/lib/vector-search/load-pdf"
 import { uploadPDFObject } from "@/lib/storage/upload-storage-object"
 import { useAuthContext } from "@/context/auth-context"
+import { CircleNotch } from "@phosphor-icons/react";
 
 
 
@@ -168,16 +169,24 @@ export function AddContentDialog() {
                 return
             }
             console.log('objectFullPath', objectFullPath)
-            await loadPDFAction({
+            const { status, error } = await loadPDFAction({
                 objectFullPath,
                 objectURL,
                 uid: auth.currentUser.uid,
-
             })
+
+            if (!status || error) {
+                console.error('Error loading pdf', error)
+                toast.error('Something went wrong. Please try again later')
+                setLoading(false)
+                return
+            }
             // upload the file
 
             setLoading(false)
 
+            toast.success('PDF uploaded successfully. The content is now available to the customer service AI agent.')
+            setOpen(false)
         } catch (err) {
             setLoading(false)
             console.error('Error loading pdf', err)
@@ -195,6 +204,14 @@ export function AddContentDialog() {
 
     },
         [selectedFile, selectedTab, url,])
+
+    React.useEffect(() => {
+        if (!open) {
+            setSelectedFile(undefined)
+            setURL('')
+        }
+
+    }, [open])
 
 
     if (isDesktop) {
@@ -224,7 +241,14 @@ export function AddContentDialog() {
                                 type="button"
                                 disabled={loading}
                                 onClick={onSubmit}
-                                className='w-full'>Submit</Button>
+                                className='w-full'>
+                                {
+                                    loading ?
+                                        <CircleNotch size={25} className="animate-spin" />
+                                        : 'Submit'
+                                }
+
+                            </Button>
                             <DialogClose asChild >
                                 <Button className='w-full' variant={'outline'}>Close</Button>
                             </DialogClose>
@@ -259,7 +283,21 @@ export function AddContentDialog() {
                     className="px-4" />
                 <DrawerFooter className="pt-2">
                     <DrawerClose asChild>
-                        <Button variant="outline">Cancel</Button>
+                        <div className="flex flex-col gap-2 w-full">
+                            <Button
+                                type="button"
+                                disabled={loading}
+                                onClick={onSubmit}
+                                className='w-full'>
+                                {
+                                    loading ?
+                                        <CircleNotch size={25} className="animate-spin" />
+                                        : 'Submit'
+                                }
+
+                            </Button>
+                            <Button variant="outline">Cancel</Button>
+                        </div>
                     </DrawerClose>
                 </DrawerFooter>
             </DrawerContent>

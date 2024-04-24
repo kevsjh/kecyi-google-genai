@@ -5,6 +5,8 @@ import type { IdDocument, Restriction, } from "@langchain/community/vectorstores
 import { v4 as uuidv4 } from 'uuid';
 import { getGoogleAccessToken } from "../auth/access-token";
 import { VectorStoreDocumentDataPoint } from "./vector-search-helper";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { addDocumentsToDocStoreParallel } from "./insert-doc-store-storage";
 
 const maximumParallelAPIRequest = 50
 
@@ -75,18 +77,58 @@ async function upsertDatapointVectorStoreRequestWithRetry({
 }
 
 
-
-
-// TODO: upload doc store
 export async function upsertVectorStore({ inputDocs }: { inputDocs: IdDocument[] }) {
     try {
 
         inputDocs.forEach((doc) => {
-            doc.id = doc.id ?? uuidv4(),
-                doc.metadata = {
-                    ...doc.metadata,
-                    id: doc.id,
-                }
+            const docId = doc.id ?? uuidv4()
+            doc.id = docId
+            doc.metadata = {
+                ...doc.metadata,
+                id: docId,
+            }
+        })
+
+
+        // apply parent child retrieval (smaller chunk in vector search for better accuracy, leverage on parent for sufficient context)
+        // parent splitter (split doc to medium chunk)
+        const parentSplitter = new RecursiveCharacterTextSplitter({
+            chunkSize: 1000,
+            chunkOverlap: 200,
+
+        });
+        // child splliter (split to smaller chunk, this provide better accuracy for vector)
+        const childSplitter = new RecursiveCharacterTextSplitter({
+            chunkSize: 300,
+            chunkOverlap: 100,
+
+        });
+
+        const parentDocs: IdDocument[] = await parentSplitter.splitDocuments(inputDocs);
+
+        parentDocs.forEach((doc) => {
+            const docId = doc.id ?? uuidv4()
+            doc.id = docId
+            doc.metadata = {
+                ...doc.metadata,
+                id: docId,
+            }
+        })
+
+
+        const childDocs: IdDocument[] = await childSplitter.splitDocuments(parentDocs);
+
+        // apply metadata and new id to child docs
+        childDocs.forEach((doc: IdDocument) => {
+            const parentDocId = doc.metadata?.id;
+            // create new id for each child doc
+            const newChildDocId = uuidv4()
+            doc.id = newChildDocId
+            doc.metadata = {
+                ...doc.metadata,
+                id: newChildDocId,
+                parentDocId: parentDocId,
+            }
         })
 
         const embeddingModel = new GoogleVertexAIEmbeddings({
@@ -109,10 +151,10 @@ export async function upsertVectorStore({ inputDocs }: { inputDocs: IdDocument[]
 
         // embed text
 
-        const textsToEmbed: string[] = inputDocs.map((doc) => doc.pageContent);
+        const textsToEmbed: string[] = childDocs.map((doc) => doc.pageContent);
         const embeddingVectors: number[][] = await embeddingModel.embedDocuments(textsToEmbed);
 
-        if (embeddingVectors.length !== inputDocs.length) {
+        if (embeddingVectors.length !== childDocs.length) {
             return {
                 datapointIdList: undefined,
                 status: false,
@@ -130,11 +172,9 @@ export async function upsertVectorStore({ inputDocs }: { inputDocs: IdDocument[]
 
         // generate datapoint and restricts
         const vectorSearchDocumentDatapoints = embeddingVectors.map((vector, idx) => {
-            const vectorStoreDataPoint = new VectorStoreDocumentDataPoint(inputDocs[idx])
+            const vectorStoreDataPoint = new VectorStoreDocumentDataPoint(childDocs[idx])
             return vectorStoreDataPoint.buildDatapoint(vector)
         });
-
-
         const datapoints: IVectorStoreDatapoint[] = vectorSearchDocumentDatapoints.map((datapoint) => {
             return {
                 datapoint_id: datapoint.datapointId,
@@ -188,6 +228,12 @@ export async function upsertVectorStore({ inputDocs }: { inputDocs: IdDocument[]
                 }
             }
         }
+
+        // upload both parent and child doc to doc store
+        await Promise.all([
+            addDocumentsToDocStoreParallel({ docs: parentDocs }),
+            addDocumentsToDocStoreParallel({ docs: childDocs }),
+        ])
 
 
         return {
