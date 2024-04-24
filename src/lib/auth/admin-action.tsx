@@ -1,6 +1,7 @@
 'use server'
 
 import { firebaseAdminAuth, firebaseAdminFirestore, initFirebaseAdminApp } from "@/config/firebase-admin-config"
+import { IContentData } from "@/types"
 import { Filter } from "firebase-admin/firestore"
 import { where } from "firebase/firestore"
 import { cookies } from "next/headers"
@@ -12,6 +13,7 @@ export async function getUseAdminKnowledge() {
     const session = sessionObj?.value
     if (session === undefined || session?.length === 0) {
         return {
+            contents: []
         }
     }
     try {
@@ -19,8 +21,6 @@ export async function getUseAdminKnowledge() {
         const uid = decodedClaims.uid
 
         const colRef = firebaseAdminFirestore.collection('contents')
-
-
         const q = colRef
             .where(
                 Filter.or(
@@ -32,18 +32,32 @@ export async function getUseAdminKnowledge() {
             .orderBy('createdAt', 'desc')
         const qRes = await q.get()
 
-
-        console.log('length', qRes.docs.length)
-
-        qRes.docs.forEach((doc) => {
+        // map to object IContentData
+        const contents = qRes.docs.map(doc => {
             const data = doc.data()
-            console.log('data', data)
+
+            const contentData: IContentData = {
+                id: doc.id,
+                uid: data.uid,
+                createdAt: data.createdAt?.toDate(),
+                objectURL: data.objectURL,
+                objectFullPath: data.objectFullPath,
+                userFilename: data.userFilename,
+                type: data.type
+            }
+            return contentData
         })
-        return
+
+        return {
+            contents
+        }
 
 
     } catch (err) {
         console.error('Error in getUseAdminKnowledge', err)
+        return {
+            contents: []
+        }
     }
 
 }

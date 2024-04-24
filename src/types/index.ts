@@ -15,7 +15,15 @@ export interface Chat extends Record<string, any> {
     agentChatType: AgentChatTypeEnum
 }
 
-
+export interface IContentData {
+    objectFullPath: string;
+    uid: string;
+    createdAt: Date;
+    objectURL: string;
+    id: string;
+    userFilename: string;
+    type: string;
+}
 
 export interface TransactionCopilotChat extends Record<string, any> {
     id: string

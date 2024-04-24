@@ -3,8 +3,8 @@ import { AddContentDialog } from "./components/add-content-dialog";
 
 export default async function Page() {
 
-    const res = await getUseAdminKnowledge()
-
+    const { contents } = await getUseAdminKnowledge()
+    console.log('content', contents)
 
     return <div className="flex  flex-col h-full p-6   w-full">
         <div className="flex items-center justify-between"><h1 className="text-3xl font-semibold">Knowledge Hub</h1>
