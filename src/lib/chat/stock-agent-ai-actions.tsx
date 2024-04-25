@@ -644,7 +644,6 @@ async function submitUserMessage(content: string) {
         let llmToolInvoked = false
 
         for await (const delta of result.fullStream) {
-          console.log('delta', delta)
 
           // check if tool-call is invoked
           const { type } = delta
