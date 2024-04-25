@@ -47,6 +47,7 @@ import { ListStockPortfolio } from '@/components/stocks/list-stock-portfolio'
 import { SellStock } from '@/components/stocks/sell-stock'
 import { createGoogleGenerativeAI } from '@/packages/google/google-provider'
 import RouteAgentUI from '@/components/route-agent/route-agent-ui'
+import LLMEntryHelper from '../llm-helper/llm-helper'
 
 
 async function confirmPurchase(symbol: string, price: number, amount: number, numberOfShares: number) {
@@ -403,12 +404,7 @@ async function confirmStockSell(symbol: string, price: number, amount: number, n
           }
         ]
       })
-
-
     }
-
-
-
   })
 
   return {
@@ -452,13 +448,59 @@ async function submitUserMessage(content: string) {
 
     ; (async () => {
       try {
+        const creds = await Promise.all([
+          getAuthByCookie(),
+          getGoogleAccessToken()
+        ])
 
-        const accessToken = await getGoogleAccessToken()
-
+        const session = creds[0]
+        const accessToken = creds[1]
         if (!accessToken) {
 
           throw new Error('Failed to get access token')
         }
+
+        if (!session || session?.user?.id?.length === 0) {
+          throw new Error('Failed to get user session')
+        }
+
+
+        const currentMessages: { role: string, content: string }[] = aiState.get().messages.map((message: { role: any; content: any }) => ({
+          role: message.role,
+          content: message.content
+        }))
+
+        // get last message from user
+        const lastUserMessage = currentMessages[currentMessages.length - 1]
+
+
+        // map chat history  without current message to string with \n delimiter
+        const chatHistoryString = currentMessages.slice(0, -1).map((message) => {
+          return `${message.role}: ${message.content}`
+        }).join('\n')
+        const {
+          revisedQuestion,
+          revisedContext }
+
+          = await LLMEntryHelper({
+            query: lastUserMessage.content,
+            chatHistory: chatHistoryString,
+            uid: session.user.id,
+            rephraseQuestion: currentMessages.length > 1,
+            minScore: 0.6
+          })
+
+
+        // remove last message in currentMessages and replace it with the revised question
+        const revisedMessages: any[] = [
+          ...currentMessages.slice(0, -1),
+          {
+            role: 'user',
+            content: revisedQuestion
+          }
+        ]
+
+
 
         const googleVertexAI = createGoogleGenerativeAI({
           baseURL: process.env.GOOGLE_CLOUD_GEMINI_BASE_URL,
@@ -470,60 +512,15 @@ async function submitUserMessage(content: string) {
         })
 
 
-
-
         const result = await experimental_streamText({
           model: googleVertexAI.chat('models/gemini-1.5-pro-preview-0409',
             // model: googleCloudVertex.generativeAI('models/gemini-1.5-pro-preview-0409',
 
           ),
-          temperature: 0.1,
+          temperature: 0.2,
           tools: {
-            trendingStocks: {
-              description: 'Useful to get trending stocks and financial stock information about the trending stock.',
-              parameters: z.object({
-                window: z.string().describe('Window for query, where 1D is 1 day, 5D is past 5 days, 1M is past 1 month, 6M, is past 6 months, YTD is past 1 year, 5Y is past 5 years and MAX is maximum. Default is "1D'),
-              }),
-              execute: async ({ window }: { window: string }) => {
-                const data = await requestTrendingStock({
-                  window
-                }).catch((e) => {
-                  console.error(`Error in requestTrendingStock: ${e}`)
-                  return undefined
-                })
-                const stockDataList: IStock[] = data?.map((stock: IStockData, i) => {
-                  const stockInfo: IStock = {
-                    symbol: stock?.symbol,
-                    price: stock?.price,
-                    delta: stock?.delta,
-                    moveAmount: stock?.moveAmount,
-                    ticker: stock.ticker
-                  }
-                  return stockInfo
-                }) ?? []
-                return stockDataList
-              },
-            },
-            showStockData: {
-              description: 'Get the current stock price of a given stock or public company. Use this to show the stock price and data to the user.',
-              parameters: z.object({
-                query: z.string().describe('Stock to be queried. Query could either be the company name, or the stock symbol in the form of AAPL or GOOG.'),
-              }),
-              execute: async ({ query, window, }: { query: string, window: string }) => {
-                // get the correct ticker from the query (either by company name or symbol)
-                const symbol = await yahooFinancialRequest({
-                  query: query
-                })
-                if (!symbol) {
-                  return undefined
-                }
-                const res = await googleFinanceRequest({
-                  query: symbol,
-                  window
-                })
-                return res
-              },
-            },
+
+
             routeAgent: {
               description: 'Tool to route user to a different agent.',
               parameters: z.object({
@@ -540,92 +537,26 @@ async function submitUserMessage(content: string) {
 
               }),
             },
-            showStockPurchase: {
-              description: 'Show stock price and the UI to purchase a stock. Use this if the user wants to purchase or buy stock.',
-              parameters: z.object({
-                symbol: z
-                  .string()
-                  .describe(
-                    'The name or symbol of the stock or currency. e.g. AAPL/GOOG.'
-                  ),
-                price: z.number().describe('The price of the stock.'),
-                numberOfShares: z
-                  .number()
-                  .optional()
-                  .describe(
-                    'The number of shares for a stock to purchase. Default to 10 shares if not available or specified. The range is between 1 to 100. If the user specifies a number smaller or larger than the range, set it to the closest range value.'
-                  ),
-              }),
-            },
-            showSellStock: {
-              description: 'Show stock price and the UI to sell a stock. Use this if the user wants to sell or short stock.',
-              parameters: z.object({
-                symbol: z
-                  .string()
-                  .describe(
-                    'The name or symbol of the stock or currency. e.g. AAPL/GOOG.'
-                  ),
-                price: z.number().describe('The price of the stock.'),
-                numberOfShares: z
-                  .number()
-                  .describe(
-                    'The total number of shares the user currnetly owns.'
-                  ),
-                sharesToSell: z
-                  .number()
-                  .optional()
-                  .describe(
-                    'The number of shares for a stock to sell. Default to 1 shares if not available or specified.'
-                  ),
-              }),
-            },
-            showUserPortfolio: {
-              description: 'Show the user portfolio. Use this to show the user portfolio and the stocks they own.',
-              parameters: z.object({
-              }),
-              execute: async () => {
-                const session = await getAuthByCookie()
-                if (session && session.user) {
-                  const response = await getUserPortfolio({ uid: session.user.id })
-                  return response
-                } else {
-                  return undefined
-                }
 
-              }
-            },
+
+
           },
           system: `\
-          You are a stock trading assistant AI. Your role is to provide information and guidance to help users make informed decisions about buying and selling stocks.
-          
-          You have access to real-time stock market data and can provide the latest prices, trends, and analysis for individual stocks or the overall market.
-          You also have access to help user to purchase and sell stocks. You may also route the user to the relevant agent based on their tasks.
-
-          When the user wants to purchase or buy stocks, you should:
-          
-            1. Verify that you have the necessary information from previous messages, including the stock symbol, current price, and the number of shares the user wants to buy.
-            2. If you have all the required details, call the \`showStockPurchase\` function to display the stock purchase interface, allowing the user to review and confirm their order.
-            3. If you're missing any critical information, politely ask the user to provide the stock name or company name so that you can call the \`showStockData\` function and retrieve the necessary details.
-          
-          If the user simply wants to view stock data or prices, call the \`showStockData\` function, which will display the current price and relevant information for the specified stock.
+          You are a customer service agent for the company KECYI bank and financial service. Your role is to provide support and information with support from the company retrieve context and data from the user.
+          You should also attempt to answer questions with the support from the following pieces of retrieved context and available function tools.
          
-          To showcase trending or popular stocks, call the \`trendingStocks\` function, which will provide a list of stocks that are currently experiencing significant trading volume or price movements.
-         
-          When the user view their stock portfolio, or wants to sell or short stocks, you should:
-          
-            1. Verify that you have the necessary information from previous messages, including the user entire stock portfolio, stock symbol, and the number of shares the user wants to sell. If you do not have the necessary information, call the \`showUserPortfolio\` function and retrieve the necessary details.
-            2. If user want to sell a stock, check if the user own that stock in their portfolio, if they do not own that particular stock, inform them about it. 
-            3. If the stock is available and you have the necessary details including symbol, stock price, and total shares owned from previous context or messages, call the \`showSellStock\` function to display the stock selling and shorting interface, allowing the user to review and confirm their action.
-          
           If the user requests, query or tasks needs to be routed to a different agent, you should
-            1. If user needs to talk to customer service agent, call the \`routeAgent\` function to route with the path '/client/agent/customerservice/chat' and name 'Customer Service Agent'.
-            2. If user needs to view their bank account transaction, report fraud transaction and any related transactions, call the \`routeAgent\` function to route with the path '/client/transactions' and name 'Transactions'.
+            1. If user ask about trending stocks, current stock portfolio, purchase or sell stocks, call the \`routeAgent\` function to route with the path '/client/agent/stockagent/chat' and name 'Stock Agent'.
+            2. If user needs to view, manage their bank account transaction, report fraud transaction and any related transactions, call the \`routeAgent\` function to route with the path '/client/transactions' and name 'Transactions'.
 
-          Throughout the conversation, feel free to provide additional context, analysis, or recommendations based on your knowledge of the stock market.
-
+          ----------------
+          RETRIEVED CONTEXT: ${revisedContext}
+          ----------------
+          
+          Think step by step and respond with a professional answer. If a response to the question cannot be determined from the context, history or the tools available, respond that you do not have enough information to respond to the question.
           If the user wants to complete an impossible task, respond that you are a demo and cannot do that.
           `,
-          messages: [...history]
+          messages: [...revisedMessages]
         })
 
         let textContent = ''
@@ -643,7 +574,7 @@ async function submitUserMessage(content: string) {
           const { type } = delta
 
           // mark the tool as invoked
-          if (type === 'tool-call' || type === 'tool-result') {
+          if (type === 'tool-call') {
             llmToolInvoked = true
           }
           if (type === 'text-delta') {
@@ -670,31 +601,9 @@ async function submitUserMessage(content: string) {
           else if (type === 'tool-call') {
             const { toolName, args } = delta
 
-            if (toolName === 'trendingStocks') {
-              uiStream.update(
-                <BotCard>
-                  <StocksSkeleton />
-                </BotCard>
-              )
-            }
 
 
-            else if (toolName === 'showStockData') {
-              uiStream.update(
-                <BotCard>
-                  <StockSkeleton />
-                </BotCard>
-              )
-            }
-            else if (toolName === 'showUserPortfolio') {
-              uiStream.update(
-                <BotCard>
-                  <ListStockPortfolioSkeleton />
-                </BotCard>
-              )
-            }
-
-            else if (toolName === 'routeAgent') {
+            if (toolName === 'routeAgent') {
               uiStream.update(
                 <BotCard>
 
@@ -733,218 +642,6 @@ async function submitUserMessage(content: string) {
                 ]
               })
             }
-            else if (toolName === 'showStockPurchase') {
-
-              uiStream.update(
-                <BotCard>
-
-                  <Purchase
-                    props={{
-                      // @ts-ignore
-                      numberOfShares: args.numberOfShares,
-                      // @ts-ignore
-                      price: args.price,
-                      // @ts-ignore
-                      symbol: args.symbol,
-                      status: 'requires_action'
-                    }}
-
-                  />
-                </BotCard>
-              )
-              aiState.done({
-                ...aiState.get(),
-                messages: [
-                  ...aiState.get().messages,
-                  {
-                    id: nanoid(),
-                    role: 'assistant',
-                    name: 'showStockPurchase',
-                    content: JSON.stringify({
-                      symbol: args.symbol,
-                      price: args.price,
-                      numberOfShares: args.numberOfShares,
-                      status: 'requires_action'
-                    }),
-                    display: {
-                      name: 'showStockPurchase',
-                      props: {
-                        args: {
-                          ...args,
-                          status: 'requires_action'
-                        }
-                      }
-                    }
-                  }
-                ]
-              })
-            }
-
-            else if (toolName === 'showSellStock') {
-
-              uiStream.update(
-                <BotCard>
-
-                  <SellStock
-                    props={{
-                      // @ts-ignore
-                      sharesToSell: args.sharesToSell,
-                      // @ts-ignore
-                      price: args.price,
-                      // @ts-ignore
-                      symbol: args.symbol,
-                      numberOfShares: args.numberOfShares,
-                      status: 'requires_action'
-                    }}
-
-                  />
-                </BotCard>
-              )
-              aiState.done({
-                ...aiState.get(),
-                messages: [
-                  ...aiState.get().messages,
-                  {
-                    id: nanoid(),
-                    role: 'assistant',
-                    name: 'showSellStock',
-                    content: JSON.stringify({
-                      symbol: args.symbol,
-                      price: args.price,
-                      sharesToSell: args.sharesToSell,
-                      numberOfShares: args.numberOfShares,
-                      status: 'requires_action'
-                    }),
-                    display: {
-                      name: 'showSellStock',
-                      props: {
-                        args: {
-                          ...args,
-                          status: 'requires_action'
-                        }
-                      }
-                    }
-                  }
-                ]
-              })
-
-            }
-
-
-          }
-          // tool invocation is completed
-          else if (type === 'tool-result') {
-
-            const { toolName, args, result } = delta
-
-            if (toolName === 'showStockData') {
-              uiStream.update(
-                <BotCard>
-                  {
-                    result ? <Stock
-                      props={result}
-                    /> : <div>Something went wrong. Please try again later</div>
-                  }
-                </BotCard>
-              )
-              aiState.done({
-                ...aiState.get(),
-                interactions: [],
-                final: true,
-
-                messages: [
-                  ...aiState.get().messages,
-                  {
-                    id: assistantChatId,
-                    role: 'assistant',
-                    content: `The stock information for ${args.query}. ${JSON.stringify({
-                      symbol:
-                        result?.symbol,
-                      price:
-                        result?.price,
-                      delta: result?.delta,
-                      financialData: result?.financialData
-                    })}`,
-                    display: {
-                      name: 'showStockData',
-                      props: {
-                        result
-                      }
-                    }
-                  }
-                ]
-              })
-            }
-            else if (toolName === 'showUserPortfolio') {
-              uiStream.update(
-                <BotCard>
-                  {
-                    result?.portfolios ? <ListStockPortfolio
-                      props={result}
-                    /> : <div>Something went wrong. Please try again later</div>
-                  }
-                </BotCard>
-              )
-              aiState.done({
-                ...aiState.get(),
-                interactions: [],
-                final: true,
-
-                messages: [
-                  ...aiState.get().messages,
-                  {
-                    id: assistantChatId,
-                    role: 'assistant',
-                    content: `User existing portfolios \n 
-                      ${result?.portfolioTableString}
-                    `,
-                    display: {
-                      name: 'showUserPortfolio',
-                      props: {
-                        result
-                      }
-                    }
-                  }
-                ]
-              })
-            }
-            else if (toolName === 'trendingStocks') {
-              uiStream.update(
-
-                <BotCard>
-                  <Stocks props={result} />
-                </BotCard>
-              )
-              aiState.done({
-                ...aiState.get(),
-                interactions: [],
-                final: true,
-                messages: [
-                  ...aiState.get().messages,
-                  {
-                    id: assistantChatId,
-                    role: 'assistant',
-                    content: `Trending stocks are ${JSON.stringify({
-                      stocks:
-                        result?.map((stock: IStock) => {
-                          return {
-                            symbol: stock?.symbol,
-                            price: stock?.price,
-                            delta: stock?.delta,
-                            financialData: stock?.financialData
-                          }
-                        }),
-                    })}`,
-                    display: {
-                      name: 'trendingStocks',
-                      props: {
-                        result
-                      }
-                    }
-                  }
-                ]
-              })
-            }
           }
         }
 
@@ -962,7 +659,7 @@ async function submitUserMessage(content: string) {
             messages: uniqueMessages
           })
         }
-        const session = await getAuthByCookie()
+
         if (session && session.user) {
           const createdAt = new Date()
           const userId = session.user.id as string
@@ -1079,73 +776,20 @@ export const getUIStateFromAIState = (aiState: Chat) => {
       id: `${aiState.chatId}-${index}`,
       display:
         (message.role === 'assistant' || message.role === 'function') ? (
+
           // @ts-ignore
-          message.display?.name === 'showStockData' ? (
+          message.display?.name === 'routeAgent' ? (
+
+            // < SpinnerMessage />
             <BotCard>
-              {
-                // @ts-ignore
-                message.display?.props?.result ? <Stock
-                  // @ts-ignore
-                  props={message.display?.props?.result}
-                /> : <div>Something went wrong. Please try again later</div>
-              }
+              {/* @ts-ignore */}
+              <RouteAgentUI props={message.display?.props?.args} />
             </BotCard>
-          ) :
             // @ts-ignore
-            message.display?.name === 'showUserPortfolio' ? (
-              <BotCard>
-                {
-                  // @ts-ignore
-                  message.display?.props?.result ? <ListStockPortfolio
-                    // @ts-ignore
-                    props={message.display?.props?.result}
-                  /> : <div>Something went wrong. Please try again later</div>
-                }
-              </BotCard>
-            ) :
-              // @ts-ignore
-              message.display?.name === 'trendingStocks' ? (
-
-                // < SpinnerMessage />
-                <BotCard>
-                  {/* @ts-ignore */}
-                  <Stocks props={message.display?.props?.result} />
-                </BotCard>
-                // @ts-ignore
-              ) :
-                // @ts-ignore
-                message.display?.name === 'routeAgent' ? (
-
-                  // < SpinnerMessage />
-                  <BotCard>
-                    {/* @ts-ignore */}
-                    <RouteAgentUI props={message.display?.props?.args} />
-                  </BotCard>
-                  // @ts-ignore
-                )
-                  :
-                  // @ts-ignore
-                  message.display?.name === 'showSellStock' ? (
-
-                    // < SpinnerMessage />
-                    <BotCard>
-                      {/* @ts-ignore */}
-                      <SellStock props={message.display?.props?.args} />
-                    </BotCard>
-                    // @ts-ignore
-                  ) : message.display?.name === 'showStockPurchase' ? (
-                    <BotCard>
-                      {
-                        // @ts-ignore
-                        message.display?.props?.args ? <Purchase
-                          // @ts-ignore
-                          props={message.display?.props?.args}
-                        /> : <div>Something went wrong. Please try again later</div>
-                      }
-                    </BotCard>
-                  ) : (
-                    <BotMessage content={message.content} />
-                  )
+          )
+            : (
+              <BotMessage content={message.content} />
+            )
         ) : message.role === 'user' ? (
           // @ts-ignore
           <UserMessage showAvatar>{message.content}</UserMessage>

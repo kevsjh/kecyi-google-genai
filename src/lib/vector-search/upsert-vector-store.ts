@@ -4,7 +4,7 @@ import { GoogleVertexAIEmbeddings } from "@langchain/community/embeddings/google
 import type { IdDocument, Restriction, } from "@langchain/community/vectorstores/googlevertexai";
 import { v4 as uuidv4 } from 'uuid';
 import { getGoogleAccessToken } from "../auth/access-token";
-import { VectorStoreDocumentDataPoint } from "./vector-search-helper";
+import { VectorStoreDocumentDataPoint } from "./vector-search-class";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { addDocumentsToDocStoreParallel } from "./insert-doc-store-storage";
 
