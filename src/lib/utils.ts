@@ -221,3 +221,13 @@ export const runAsyncFnWithoutBlocking = (
   fn()
 }
 
+
+
+export function isWebURLValid(url: string) {
+  try {
+    new URL(url.startsWith("http") ? url : `https://${url}`);
+    return true
+  } catch (err) {
+    return false;
+  }
+}

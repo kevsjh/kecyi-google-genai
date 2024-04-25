@@ -675,9 +675,7 @@ async function submitUserMessage(content: string) {
                 ]
               })
             } else if (toolName === 'retrieveContext') {
-
-              messageStream.update(<BotMessage content={'Give me a second, searching for additional information from knowledge hub...'} />)
-
+              messageStream.update(<BotMessage content={'I am currently searching for additional information from the knowledge hub. Hang tight . . .'} />)
             }
           }
           else if (type === 'tool-result') {
@@ -685,7 +683,7 @@ async function submitUserMessage(content: string) {
 
             if (toolName === 'retrieveContext') {
 
-              console.log('tool result invoke retrieve context',)
+
 
             }
           }
@@ -736,8 +734,6 @@ async function submitUserMessage(content: string) {
             await saveChat(chat)
           }
         }
-
-        console.log('final gaodim')
 
         uiStream.done()
         textStream.done()

@@ -141,12 +141,6 @@ export async function llmStreamEntryHelper({ messageStreamCallbackFn, assistantC
 
     'use server'
 
-
-
-
-    console.log('llm stream query', query)
-
-
     const retrievedContext = await LLMVectorSearchHelper({
         query: query,
         uid: uid,
@@ -180,7 +174,7 @@ export async function llmStreamEntryHelper({ messageStreamCallbackFn, assistantC
         let textContent = ''
 
         for await (const delta of result.fullStream) {
-            console.log('nested edlta', delta)
+
             const { type } = delta
 
             if (type === 'text-delta') {
@@ -199,7 +193,15 @@ export async function llmStreamEntryHelper({ messageStreamCallbackFn, assistantC
                         {
                             id: assistantChatId,
                             role: 'assistant',
-                            content: textContent
+                            content: textContent,
+                            display: {
+                                name: 'retrieveContext',
+                                props: {
+                                    args: {
+                                        content: textContent
+                                    }
+                                }
+                            }
                         }
                     ]
                 })
@@ -208,14 +210,14 @@ export async function llmStreamEntryHelper({ messageStreamCallbackFn, assistantC
         }
         const { chatId, messages, interactions, agentChatType } = aiState.get()
         const uniqueMessages = removeDuplicateMessages(messages)
-        console.log('unique message', uniqueMessages)
+
         aiState.done({
             ...aiState.get(),
             interactions: [],
 
             messages: uniqueMessages
         })
-        console.log('completed delta')
+
 
     } catch (err) {
 

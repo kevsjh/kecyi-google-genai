@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { FilePdf, LinkSimple } from "@phosphor-icons/react/dist/ssr";
 
 
 export default async function Page() {
@@ -18,7 +19,7 @@ export default async function Page() {
     const { contents } = await getUseAdminKnowledge()
 
     return <div className="flex  flex-col h-full p-6  gap-6  w-full">
-        <div className="flex items-center justify-between"><h1 className="text-3xl font-semibold">Knowledge Hub</h1>
+        <div className="flex items-center justify-between"><h1 className="text-lg md:text-3xl font-semibold">Knowledge Hub</h1>
             <AddContentDialog />
 
         </div>
@@ -38,9 +39,20 @@ export default async function Page() {
                         return (
                             <TableRow key={content.id}>
                                 <TableCell>
-                                    <Link href={`/admin/knowledge/${content.id}`}>
-                                        {content.userFilename}
-                                    </Link>
+                                    <div className="flex items-center gap-2">
+                                        {
+                                            content.type === 'web' && <Link
+                                                target="_blank"
+                                                href={`${content.userFilename}`}
+                                            >
+                                                <LinkSimple size={20} />
+                                            </Link>
+                                        }
+                                        <Link
+                                            href={`/admin/knowledge/${content.id}`}>
+                                            {content.userFilename}
+                                        </Link>
+                                    </div>
                                 </TableCell>
                                 <TableCell>
                                     {

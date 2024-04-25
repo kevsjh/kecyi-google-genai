@@ -19,3 +19,22 @@ export async function getGoogleAccessToken() {
 
     return accessToken.token;
 }
+
+
+export async function getGoogleIdToken({ url }: { url: string }) {
+
+    const auth = new GoogleAuth({
+        projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
+        credentials: {
+
+            "client_email": process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+            "private_key": process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/gm, "\n"),
+            "universe_domain": "googleapis.com"
+        }
+    },);
+    const client = await auth.getIdTokenClient(url)
+    const token = await client.idTokenProvider.fetchIdToken(url);
+
+
+    return token;
+}

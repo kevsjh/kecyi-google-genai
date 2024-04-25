@@ -92,6 +92,7 @@ export async function loadPDFAction({ objectFullPath, objectURL, uid }: { uid: s
             datapointIdList,
             userFilename,
             type: 'pdf',
+            viewStatus: true,
         })
 
 

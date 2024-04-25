@@ -35,10 +35,12 @@ export function UserMessage({ children }: { children: React.ReactNode }) {
 
 export function BotMessage({
   content,
-  className
+  className,
+  attachments
 }: {
   content: string | StreamableValue<string>
   className?: string
+  attachments?: React.ReactNode
 }) {
   const text = useStreamableText(content)
 
@@ -89,7 +91,9 @@ export function BotMessage({
         >
           {text}
         </MemoizedReactMarkdown>
+
       </div>
+      {attachments}
     </div>
   )
 }

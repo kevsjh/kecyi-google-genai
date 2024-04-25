@@ -1,8 +1,58 @@
+import { firebaseAdminDefaultBucket } from "@/config/firebase-admin-config";
 import { IdDocument } from "@langchain/community/vectorstores/googlevertexai";
+import { getDownloadURL } from "firebase-admin/storage";
 import { GoogleCloudStorageDocstore } from "langchain/stores/doc/gcs";
 import { v4 as uuidv4 } from 'uuid';
 
 const chunkUploadDocStore = 50
+
+
+export async function uploadPDFObjectToStorage({ webURL, inputObject, objectId, uid }: { uid: string, webURL: string, objectId: string, inputObject: string }) {
+    try {
+
+        const objectFilename = `pdf/${objectId}.pdf`
+
+        const fileRef = firebaseAdminDefaultBucket.file(objectFilename)
+
+        const metadata = {
+            contentDisposition: `inline; filename=${objectFilename}`,
+            filename: objectFilename,
+            fileId: objectId,
+            webURL,
+            uid,
+            contentType: 'application/pdf',
+        }
+
+
+        await firebaseAdminDefaultBucket.upload(inputObject, {
+            destination: objectFilename,
+            contentType: 'application/pdf',
+            metadata
+        })
+
+
+        await fileRef.setMetadata({
+            contentType: 'application/pdf',
+            contentDisposition: `inline; filename=${objectFilename}`,
+            metadata: metadata,
+        })
+
+
+        const objectURL = await getDownloadURL(fileRef)
+        return {
+            objectURL,
+            objectFullPath: objectFilename
+        }
+    } catch (err) {
+        return {
+            objectURL: undefined,
+            objectFullPath: undefined
+        }
+    }
+
+}
+
+
 
 export async function addDocumentsToDocStoreParallel({ docs }: { docs: IdDocument[] }) {
     try {

@@ -4,7 +4,7 @@ export const maxDuration = 180;
 
 import * as React from "react"
 
-import { cn } from "@/lib/utils"
+import { cn, isWebURLValid } from "@/lib/utils"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { Button } from "@/components/ui/button"
 import {
@@ -31,11 +31,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
-import { loadPDFAction } from "@/lib/vector-search/load-pdf"
+import { loadPDFAction } from "@/lib/vector-search/load-pdf-action"
 import { uploadPDFObject } from "@/lib/storage/upload-storage-object"
 import { useAuthContext } from "@/context/auth-context"
 import { CircleNotch } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
+import { loadWebURLAction } from "@/lib/vector-search/load-web-url-action";
 
 
 
@@ -112,15 +113,15 @@ function AddContentMainBody({
             </TabsContent>
             <TabsContent value="URL"> <div className="grid w-full max-w-sm items-center gap-1.5">
                 <Label htmlFor="url">URL</Label>
-                <Input type="url" id="url" placeholder="genai.kecyi.com/blog/life-insurance" />
+                <Input
+                    value={url}
+                    onChange={(e) => setURL(e.target.value)}
+                    type="url" id="url" placeholder="genai.kecyi.com/blog/life-insurance" />
             </div>
                 <Label htmlFor="url">Upload a webpage as knowledge content.</Label>
             </TabsContent>
         </Tabs>
     </div>
-
-
-
 }
 
 export function AddContentDialog() {
@@ -128,22 +129,52 @@ export function AddContentDialog() {
     const isDesktop = useMediaQuery("(min-width: 768px)")
     const [selectedFile, setSelectedFile] = React.useState<File | undefined>(undefined)
     const [selectedTab, setSelectedTab] = React.useState<'PDF' | 'URL'>('PDF')
-    const [url, setURL] = React.useState<string>('')
+    const [inputURL, setInputURL] = React.useState<string>('')
     const [loading, setLoading] = React.useState(false)
     const { auth } = useAuthContext()
     const router = useRouter()
 
-    const handleURLSubmit = (url: string) => {
+    const handleURLSubmit = async (url: string) => {
+
+        console.log('url', url)
+        if (auth.currentUser === null) {
+            toast.error('Please sign in to upload content')
+            return
+        }
         if (url.length === 0) {
             toast.error("Please enter a URL")
             return
         }
-        // validate url input is a legitimate url
-        const urlRegex = new RegExp(/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/)
-        if (!urlRegex.test(url)) {
+
+        const isValid = isWebURLValid(url)
+        if (!isValid) {
             toast.error("Please enter a valid URL")
             return
         }
+
+        try {
+            setLoading(true)
+            const { status, error } = await loadWebURLAction({
+                webURL: url,
+                uid: auth.currentUser.uid
+            })
+            if (!status || error) {
+                console.error('Error loading webpage', error)
+                toast.error('Something went wrong. Please try again later')
+                setLoading(false)
+                return
+            }
+            // upload the web page url
+            setLoading(false)
+            router.refresh()
+            toast.success('Web page uploaded successfully. The content is now available to the customer service AI agent.')
+            setOpen(false)
+        } catch (err) {
+            setLoading(false)
+            console.error('Error loading web url', err)
+            toast.error('Something went wrong. Please try again later')
+        }
+
     }
 
     const handlePDFSubmit = async (selectedFile: File | undefined) => {
@@ -170,7 +201,7 @@ export function AddContentDialog() {
                 setLoading(false)
                 return
             }
-            console.log('objectFullPath', objectFullPath)
+
             const { status, error } = await loadPDFAction({
                 objectFullPath,
                 objectURL,
@@ -200,20 +231,20 @@ export function AddContentDialog() {
     }
 
     const onSubmit = React.useCallback(() => {
-        console.log('submitting')
+        console.log('submitting', inputURL)
         if (selectedTab === 'PDF') {
             handlePDFSubmit(selectedFile)
         } else {
-            handleURLSubmit(url)
+            handleURLSubmit(inputURL)
         }
 
     },
-        [selectedFile, selectedTab, url,])
+        [selectedFile, selectedTab, inputURL,])
 
     React.useEffect(() => {
         if (!open) {
             setSelectedFile(undefined)
-            setURL('')
+            setInputURL('')
         }
 
     }, [open])
@@ -237,8 +268,8 @@ export function AddContentDialog() {
                         setSelectedFile={setSelectedFile}
                         selectedTab={selectedTab}
                         setSelectedTab={setSelectedTab}
-                        url={url}
-                        setURL={setURL}
+                        url={inputURL}
+                        setURL={setInputURL}
                     />
                     <DialogFooter className="w-full">
                         <div className="w-full flex flex-col  gap-2">
@@ -282,8 +313,8 @@ export function AddContentDialog() {
                     setSelectedFile={setSelectedFile}
                     selectedTab={selectedTab}
                     setSelectedTab={setSelectedTab}
-                    url={url}
-                    setURL={setURL}
+                    url={inputURL}
+                    setURL={setInputURL}
 
                     className="px-4" />
                 <DrawerFooter className="pt-2">
