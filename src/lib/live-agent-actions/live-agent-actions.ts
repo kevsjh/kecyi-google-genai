@@ -3,7 +3,7 @@
 import { firebaseAdminAuth, firebaseAdminFirestore, initFirebaseAdminApp } from "@/config/firebase-admin-config"
 import { cookies } from "next/headers"
 import { llmSummarizeChatHistory } from "../llm-helper/llm-helper"
-import { ILiveAgentDoc } from "@/types"
+import { ILiveAgentDoc, ILiveAgentMessage } from "@/types"
 
 
 initFirebaseAdminApp()
@@ -191,26 +191,43 @@ export async function getLiveAgentChats() {
 
 
 export async function getLiveAgentChatsById(id: string) {
+    let currentMessages: ILiveAgentMessage[] = []
+
     try {
+
+
+
         const sessionObj = cookies().get('session')
         const session = sessionObj?.value
         if (session === undefined || session?.length === 0) {
-            return undefined
+            return {
+                liveAgentDoc: undefined,
+                currentMessages
+            }
         }
         const decodedClaims = await firebaseAdminAuth.verifySessionCookie(session, true)
         const uid = decodedClaims.uid
 
         const liveAgentDocRef = firebaseAdminFirestore.collection('liveagent').doc(id)
 
+        const liveAgentMessageColRef = liveAgentDocRef.collection('messages')
+
+
         const liveAgentDoc = await liveAgentDocRef.get()
 
         const data = liveAgentDoc.data()
         if (data === undefined) {
-            return undefined
+            return {
+                liveAgentDoc: undefined,
+                currentMessages
+            }
         }
 
         if (data?.uid !== uid) {
-            return undefined
+            return {
+                liveAgentDoc: undefined,
+                currentMessages
+            }
         }
 
 
@@ -223,13 +240,34 @@ export async function getLiveAgentChatsById(id: string) {
         }
 
 
-        return liveAgentDocData
 
+        if (liveAgentDocData.status === 'ended' || liveAgentDocData.status === 'active') {
+            const liveMessageQ = liveAgentMessageColRef.orderBy('createdAt', 'desc')
+            const qRes = await liveMessageQ.get()
 
+            qRes.docs.forEach(doc => {
+                const data = doc.data()
+                const liveAgentMessage: ILiveAgentMessage = {
+                    createdAt: data.createdAt?.toDate(),
+                    id: data.id,
+                    message: data.message,
+                    role: data.role,
+                }
+                currentMessages.push(liveAgentMessage)
+            })
+        }
+
+        return {
+            liveAgentDoc: liveAgentDocData,
+            currentMessages
+        }
 
     } catch (err) {
         console.error('Error getting live agent chats', err)
-        return undefined
+        return {
+            liveAgentDoc: undefined,
+            currentMessages
+        }
     }
 
 }

@@ -20,9 +20,9 @@ export default async function ClientRootLayout({
 
     return (
         <div className="flex min-h-screen w-full flex-col ">
-            <PortalSideNav items={clientSideNavItems} />
+            <PortalSideNav items={adminSideNavItems} />
             <div className="flex flex-col   h-dvh sm:pl-14">
-                <AppHeader items={clientSideNavItems} />
+                <AppHeader items={adminSideNavItems} />
                 {children}
             </div>
         </div>

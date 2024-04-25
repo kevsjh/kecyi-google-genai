@@ -4,9 +4,7 @@ import { createGoogleGenerativeAI } from "@/packages/google/google-provider"
 import { getGoogleAccessToken } from "../auth/access-token"
 import { experimental_generateText, experimental_streamText, streamToResponse } from "ai"
 import queryVectorSearch from "../vector-search/query-vector-search"
-import { getMutableAIState } from "ai/rsc"
-import { BotCard, BotMessage, spinner } from '@/components/stocks'
-import { ReactNode } from "react"
+
 import { removeDuplicateMessages } from "../utils"
 
 

@@ -11,7 +11,7 @@ import React from "react";
 import Textarea from 'react-textarea-autosize'
 import { toast } from "sonner";
 
-export default function AgentLiveChatPrompt({ id }: { id: string }) {
+export default function AgentLiveChatPrompt({ id, panel }: { id: string, panel: 'admin' | 'client' }) {
     const [audioLoading, setAudioLoading] = React.useState(false)
     const [input, setInput] = React.useState('')
     const inputRef = React.useRef<HTMLTextAreaElement>(null)
@@ -35,7 +35,7 @@ export default function AgentLiveChatPrompt({ id }: { id: string }) {
                 const { status } = await sendLiveAgentMessage({
                     id,
                     message: value,
-                    role: 'admin'
+                    role: panel
                 })
 
                 if (!status) {

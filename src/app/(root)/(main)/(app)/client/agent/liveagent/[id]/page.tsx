@@ -1,7 +1,7 @@
+import AdminActiveLiveChat from "@/components/live-agent-components/active-live-chat"
+import AdminPendingLiveChat from "@/components/live-agent-components/pending-live-chat"
 import { getLiveAgentChatsById } from "@/lib/live-agent-actions/live-agent-actions"
 import { notFound } from "next/navigation"
-import AdminPendingLiveChat from "../../../../../../../components/live-agent-components/pending-live-chat"
-import AdminActiveLiveChat from "../../../../../../../components/live-agent-components/active-live-chat"
 
 export default async function IndexPage({ params }: {
     params: {
@@ -23,7 +23,7 @@ export default async function IndexPage({ params }: {
     }
     if (liveAgentDoc.status === 'active') {
         return <AdminActiveLiveChat
-            panel='admin'
+            panel='client'
             liveAgentDoc={liveAgentDoc} currentMessages={currentMessages} />
     }
 

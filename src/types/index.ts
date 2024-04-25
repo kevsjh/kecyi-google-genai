@@ -69,12 +69,19 @@ export interface ClientChatSnippet {
 export interface ILiveAgentDoc {
     createdAt: Date,
     id: string,
-    status: 'pending' | 'closed' | 'active',
+    status: 'pending' | 'ended' | 'active',
     summarizeChat: string,
     uid: string
 }
 
 
+export interface ILiveAgentMessage {
+    role: 'client' | 'admin',
+    message: string,
+    id: string,
+    createdAt: Date,
+
+}
 export interface StockGraphData {
     price: number;
     currency: string;

@@ -16,7 +16,7 @@ import remarkMath from "remark-math"
 export default function AdminInboxItem({ id, status, summarizeChat }: {
 
     id: string;
-    status: 'pending' | 'closed' | 'active',
+    status: 'pending' | 'ended' | 'active',
     summarizeChat: string
 
 
@@ -88,7 +88,7 @@ export default function AdminInboxItem({ id, status, summarizeChat }: {
         </div>
         <div>
             {
-                status === 'closed' ? <div className=" h-3 w-3 bg-muted rounded-full" /> :
+                status === 'ended' ? <div className=" h-3 w-3 bg-muted rounded-full" /> :
                     status === 'active' ? <div className="h-3 w-3 bg-green-500 rounded-full" /> :
                         <div className="h-3 w-3 bg-amber-500 rounded-full " />
             }
