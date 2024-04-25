@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils"
 import { IUserStockPortfolio, IUserTransaction } from "@/types"
 import ToggleCopilot from "./toggle-copilot"
+import PortfolioCopilot from "./portfolio-copilot"
 
 export default function PortfolioTable({ userPortfolios, totalPortfolio }: {
     userPortfolios: IUserStockPortfolio[]
@@ -70,6 +71,18 @@ export default function PortfolioTable({ userPortfolios, totalPortfolio }: {
                                     </TableRow>
                                 );
                             })
+                        }
+                        {
+                            (userPortfolios === undefined || userPortfolios?.length === 0) &&
+                            <TableRow>
+                                <TableCell colSpan={5} className="text-center ">
+                                    <div className="w-full flex flex-col items-center">
+                                        No stocks found.
+                                        <div className="flex gap-2 items-center">Start purchasing stocks with copilot <ToggleCopilot /></div>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+
                         }
                     </TableBody>
                 </Table>
