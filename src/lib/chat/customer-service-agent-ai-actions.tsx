@@ -48,373 +48,10 @@ import { SellStock } from '@/components/stocks/sell-stock'
 import { createGoogleGenerativeAI } from '@/packages/google/google-provider'
 import RouteAgentUI from '@/components/route-agent/route-agent-ui'
 import LLMEntryHelper, { llmStreamEntryHelper } from '../llm-helper/llm-helper'
+import { sendLiveAgentRequest } from '../live-agent-actions/live-agent-actions'
+import TransferLiveAgentUI from '@/components/route-agent/live-agent-ui'
+import TransferLiveAgentUILoading from '@/components/route-agent/live-agent-ui-load'
 
-
-async function confirmPurchase(symbol: string, price: number, amount: number, numberOfShares: number) {
-  'use server'
-
-  const aiState = getMutableAIState<typeof CustomerServiceAgentAI>()
-
-  const purchasing = createStreamableUI(
-    <div className="inline-flex items-start gap-1 md:items-center">
-      {spinner}
-      <p className="mb-2 text-white">
-        Purchasing {amount} ${symbol}...
-      </p>
-    </div>
-  )
-
-  const systemMessage = createStreamableUI(null)
-
-  runAsyncFnWithoutBlocking(async () => {
-
-    const session = await getAuthByCookie()
-
-    if (session && session.user) {
-      purchasing.update(
-        <div className="inline-flex items-start gap-1 md:items-center">
-          {spinner}
-          <p className="mb-2 text-primary">
-            Purchasing {amount} ${symbol}... working on it...
-          </p>
-        </div>
-      )
-      const { status, error } = await purchaseStockAction({ symbol, price, uid: session?.user.id, numberOfShares })
-
-
-
-      if (error || !status) {
-        purchasing.done(
-          <div>
-            <p className="mb-2 text-primary">
-              Failed to purchase {symbol}. {error ?? 'Something went wrong. Please try again later'}
-            </p>
-          </div>
-        )
-      } else {
-
-        purchasing.done(
-          <div>
-            <p className="mb-2 text-primary">
-              You have successfully purchased {amount} ${symbol}. Total cost:{' '}
-              {formatNumber(amount * price)}
-            </p>
-            <div className='flex gap-4 items-center'>
-              <Link
-                className='text-sm px-2 py-0.5 font-medium text-primary  border-2 rounded-2xl'
-                href='/client/portfolio'>View Portfolio</Link>
-              <Link
-                className='text-sm px-2 py-0.5 text-primary font-medium border-2 rounded-2xl'
-                href='/client/transactions'>View Transactions</Link>
-            </div>
-          </div>
-        )
-        systemMessage.done(
-          <SystemMessage>
-            You have purchased {amount} shares of {symbol} at ${price}. Total cost ={' '}
-            {formatNumber(amount * price)}.
-
-          </SystemMessage>
-        )
-      }
-
-      aiState.done({
-        ...aiState.get(),
-        messages: [
-          ...aiState.get().messages.slice(0, -1),
-          {
-            id: nanoid(),
-            role: 'assistant',
-            name: 'showStockPurchase',
-            content: JSON.stringify({
-              symbol,
-              price,
-              defaultAmount: amount,
-              status: status ? 'completed' : 'error',
-              numberOfShares: amount,
-              purchaseStatus: status,
-              purchaseError: error,
-            }),
-            display: {
-              name: 'showStockPurchase',
-              props: {
-                args: {
-                  symbol,
-                  price,
-                  defaultAmount: amount,
-                  status: status ? 'completed' : 'error',
-                  numberOfShares: amount,
-                  purchaseStatus: status,
-                  purchaseError: error,
-                }
-              }
-            }
-          }
-        ]
-      })
-
-      const { chatId, messages, interactions, agentChatType } = aiState.get()
-      const createdAt = new Date()
-      const userId = session.user.id as string
-      const path = `/client/agent/${agentChatType?.toLowerCase()}/chat/${chatId}`
-      const title = messages[0].content.substring(0, 100)
-
-      const chat: Chat = {
-        id: chatId,
-        title,
-        userId,
-        createdAt,
-        // @ts-ignore
-        messages: messages,
-        path,
-        agentChatType
-      }
-
-      await saveChat(chat)
-    } else {
-      await sleep(1000)
-      purchasing.update(
-        <div className="inline-flex items-start gap-1 md:items-center">
-          {spinner}
-          <p className="mb-2 text-primary">
-            Purchasing {amount} ${symbol}... working on it...
-          </p>
-        </div>
-      )
-      await sleep(1000)
-      purchasing.done(
-        <div>
-          <p className="mb-2 text-primary">
-            You have successfully purchased {amount} ${symbol}. Total cost:{' '}
-            {formatNumber(amount * price)}
-          </p>
-        </div>
-      )
-
-      systemMessage.done(
-        <SystemMessage>
-          You have purchased {amount} shares of {symbol} at ${price}. Total cost ={' '}
-          {formatNumber(amount * price)}.
-        </SystemMessage>
-      )
-
-      aiState.done({
-        ...aiState.get(),
-        messages: [
-          ...aiState.get().messages.slice(0, -1),
-          {
-            id: nanoid(),
-            role: 'assistant',
-            name: 'showStockPurchase',
-            content: JSON.stringify({
-              symbol,
-              price,
-              defaultAmount: amount,
-              status: 'completed',
-              numberOfShares: amount
-            }),
-            display: {
-              name: 'showStockPurchase',
-              props: {
-                args: {
-                  symbol,
-                  price,
-                  defaultAmount: amount,
-                  status: 'completed',
-                  numberOfShares: amount
-                }
-              }
-            }
-          }
-        ]
-      })
-    }
-  })
-
-  return {
-    purchasingUI: purchasing.value,
-    newMessage: {
-      id: nanoid(),
-      display: systemMessage.value
-    }
-  }
-}
-
-
-
-async function confirmStockSell(symbol: string, price: number, amount: number, numberOfShares: number, sharesToSell: number) {
-  'use server'
-
-  const aiState = getMutableAIState<typeof CustomerServiceAgentAI>()
-
-  const selling = createStreamableUI(
-    <div className="inline-flex items-start gap-1 md:items-center">
-      {spinner}
-      <p className="mb-2 text-white">
-        Selling {amount} ${symbol}...
-      </p>
-    </div>
-  )
-
-  const systemMessage = createStreamableUI(null)
-
-  runAsyncFnWithoutBlocking(async () => {
-
-    const session = await getAuthByCookie()
-
-    if (session && session.user) {
-      const { status, error } = await sellStockAction({ symbol, uid: session?.user.id, sharesToSell })
-
-      selling.update(
-        <div className="inline-flex items-start gap-1 md:items-center">
-          {spinner}
-          <p className="mb-2 text-primary">
-            Selling {sharesToSell} ${symbol}... working on it...
-          </p>
-        </div>
-      )
-
-      if (error || !status) {
-        selling.done(
-          <div>
-            <p className="mb-2 text-primary">
-              Failed to sell {symbol}. {error ?? 'Something went wrong. Please try again later'}
-            </p>
-          </div>
-        )
-      } else {
-
-        selling.done(
-          <div>
-            <p className="mb-2 text-primary">
-              You have successfully sold {sharesToSell} ${symbol}. Total amount sold:{' '}
-              {formatNumber(amount * price)} USD
-            </p>
-            <div className='flex gap-4 items-center'>
-              <Link
-                className='text-sm px-2 py-0.5 text-primary font-medium border-2 rounded-2xl'
-                href='/client/portfolio'>View Portfolio</Link>
-              <Link
-                className='text-sm px-2 py-0.5 text-primary font-medium border-2 rounded-2xl'
-                href='/client/transactions'>View Transactions</Link>
-            </div>
-          </div>
-        )
-        systemMessage.done(
-          <SystemMessage>
-            You have successfully sold {sharesToSell} shares of {symbol} at ${price}. Total price ={' '}
-            {formatNumber(amount * price)}.
-
-          </SystemMessage>
-        )
-      }
-
-      aiState.done({
-        ...aiState.get(),
-        messages: [
-          ...aiState.get().messages.slice(0, -1),
-          {
-            id: nanoid(),
-            role: 'assistant',
-            name: 'showSellStock',
-            content: JSON.stringify({
-              symbol,
-              price,
-              defaultAmount: amount,
-              status: status ? 'completed' : 'error',
-              numberOfShares: amount,
-              error: error,
-              sharesToSell
-            }),
-            display: {
-              name: 'showSellStock',
-              props: {
-                args: {
-                  symbol,
-                  price,
-                  defaultAmount: amount,
-                  status: status ? 'completed' : 'error',
-                  numberOfShares: amount,
-                  error: error,
-                  sharesToSell
-                }
-              }
-            }
-          }
-        ]
-      })
-
-      const { chatId, messages, interactions, agentChatType } = aiState.get()
-      const createdAt = new Date()
-      const userId = session.user.id as string
-      const path = `/client/agent/${agentChatType?.toLowerCase()}/chat/${chatId}`
-      const title = messages[0].content.substring(0, 100)
-
-      const chat: Chat = {
-        id: chatId,
-        title,
-        userId,
-        createdAt,
-        // @ts-ignore
-        messages: messages,
-        path,
-        agentChatType
-      }
-
-      await saveChat(chat)
-    } else {
-      selling.done(
-        <div>
-          <p className="mb-2 text-primary">
-            You are not logged in
-          </p>
-        </div>
-      )
-
-      aiState.done({
-        ...aiState.get(),
-        messages: [
-          ...aiState.get().messages.slice(0, -1),
-          {
-            id: nanoid(),
-            role: 'assistant',
-            name: 'showSellStock',
-            content: JSON.stringify({
-              symbol,
-              price,
-              defaultAmount: amount,
-              status: 'error',
-              numberOfShares: numberOfShares,
-              sharesToSell
-            }),
-            display: {
-              name: 'showSellStock',
-              props: {
-                args: {
-                  symbol,
-                  price,
-                  defaultAmount: amount,
-                  status: 'error',
-                  numberOfShares: numberOfShares,
-                  sharesToSell,
-                  error: 'You were not logged in'
-                }
-              }
-            }
-          }
-        ]
-      })
-    }
-  })
-
-  return {
-    sellingUI: selling.value,
-    newMessage: {
-      id: nanoid(),
-      display: systemMessage.value
-    }
-  }
-}
 
 
 async function submitUserMessage(content: string) {
@@ -465,41 +102,6 @@ async function submitUserMessage(content: string) {
         }
 
 
-        // const currentMessages: { role: string, content: string }[] = aiState.get().messages.map((message: { role: any; content: any }) => ({
-        //   role: message.role,
-        //   content: message.content
-        // }))
-
-        // // get last message from user
-        // const lastUserMessage = currentMessages[currentMessages.length - 1]
-
-
-        // // map chat history  without current message to string with \n delimiter
-        // const chatHistoryString = currentMessages.slice(0, -1).map((message) => {
-        //   return `${message.role}: ${message.content}`
-        // }).join('\n')
-        // const {
-        //   revisedQuestion,
-        //   revisedContext }
-
-        //   = await LLMEntryHelper({
-        //     query: lastUserMessage.content,
-        //     chatHistory: chatHistoryString,
-        //     uid: session.user.id,
-        //     rephraseQuestion: currentMessages.length > 1,
-        //     minScore: 0.6
-        //   })
-
-
-        // // remove last message in currentMessages and replace it with the revised question
-        // const revisedMessages: any[] = [
-        //   ...currentMessages.slice(0, -1),
-        //   {
-        //     role: 'user',
-        //     content: revisedQuestion
-        //   }
-        // ]
-
         const assistantChatId = nanoid()
 
         const googleVertexAI = createGoogleGenerativeAI({
@@ -537,6 +139,29 @@ async function submitUserMessage(content: string) {
 
               }),
             },
+            transferLiveAgent: {
+              description: 'Tool to transfer user to live agent.',
+              parameters: z.object({
+              }),
+              execute: async () => {
+
+                // convert history to string that is delimited by \n with role and content
+                const historyString =
+                  history.map((message: { role: any; content: any }) => `${message.role}: ${message.content}`).join('\n')
+
+                const { liveAgentDocId } = await sendLiveAgentRequest({
+                  chatHistory: historyString
+                })
+
+                const clientPath = liveAgentDocId ? `/client/agent/liveagent/${liveAgentDocId}` : `/client/agent/liveagent`
+                const adminPath = liveAgentDocId ? `/admin/inbox/${liveAgentDocId}` : `/admin/inbox`
+
+                return {
+                  clientPath,
+                  adminPath
+                }
+              }
+            },
             retrieveContext: {
               description: 'Tool to retrieve context from knowledge base',
               parameters: z.object({
@@ -570,10 +195,10 @@ async function submitUserMessage(content: string) {
 
           },
           system: `\
-          You are a customer service agent for the company KECYI bank and financial service. Your role is to provide support and information with support from the company retrieve context and data from the user.
+          You are a customer service agent for the company KECYI bank and financial service.Your role is to provide support and information with support from the company retrieve context and data from the user.
          
           If the user query or request for certain tasks that needs to be routed to a different agent, you should
-            1. Check if user ask about trending stocks, current stock portfolio, purchase or sell stocks, call the \`routeAgent\` function to route with the path '/client/agent/stockagent/chat' and name 'Stock Agent'.
+                1. Check if user ask about trending stocks, current stock portfolio, purchase or sell stocks, call the \`routeAgent\` function to route with the path '/client/agent/stockagent/chat' and name 'Stock Agent'.
             2. Check if user needs to view, manage their bank account transaction, report fraud transaction and any related transactions, call the \`routeAgent\` function to route with the path '/client/transactions' and name 'Transactions'.
             3. Do not make up any agent, path or name, beyond the provided exact path and name.
 
@@ -600,7 +225,7 @@ async function submitUserMessage(content: string) {
           // check if tool-call is invoked
           const { type } = delta
 
-          console.log('detla', delta)
+
 
           // mark the tool as invoked
           if (type === 'tool-call') {
@@ -634,6 +259,7 @@ async function submitUserMessage(content: string) {
           // before tools invocation is completed (show skeleton etc...)
           else if (type === 'tool-call') {
             const { toolName, args } = delta
+
 
             if (toolName === 'routeAgent') {
 
@@ -674,17 +300,53 @@ async function submitUserMessage(content: string) {
                   }
                 ]
               })
-            } else if (toolName === 'retrieveContext') {
+            }
+            else if (toolName === 'transferLiveAgent') {
+
+              uiStream.update(
+                <BotCard>
+                  <TransferLiveAgentUILoading />
+
+                </BotCard>
+              )
+            }
+            else if (toolName === 'retrieveContext') {
               messageStream.update(<BotMessage content={'I am currently searching for additional information from the knowledge hub. Hang tight . . .'} />)
             }
           }
           else if (type === 'tool-result') {
             const { toolName, args, result } = delta
 
-            if (toolName === 'retrieveContext') {
+            if (toolName === 'transferLiveAgent') {
+              uiStream.update(
+                <BotCard>
+                  {
+                    <TransferLiveAgentUI
+                      props={result}
+                    />
+                  }
+                </BotCard>
+              )
+              aiState.done({
+                ...aiState.get(),
+                interactions: [],
+                final: true,
 
-
-
+                messages: [
+                  ...aiState.get().messages,
+                  {
+                    id: assistantChatId,
+                    role: 'assistant',
+                    content: `Transfering to live agent.`,
+                    display: {
+                      name: 'transferLiveAgent',
+                      props: {
+                        result
+                      }
+                    }
+                  }
+                ]
+              })
             }
           }
 
@@ -789,10 +451,6 @@ export type UIState = {
 export const CustomerServiceAgentAI: AIProvider<AIState, UIState, {}> = createAI<AIState, UIState>({
   actions: {
     submitUserMessage,
-
-    confirmPurchase,
-    confirmStockSell
-    // describeImage
   },
   initialUIState: [],
   initialAIState: { chatId: nanoid(), interactions: [], messages: [], agentChatType: AgentChatTypeEnum.CUSTOMERSERVICE },
@@ -836,10 +494,19 @@ export const getUIStateFromAIState = (aiState: Chat) => {
               <RouteAgentUI props={message.display?.props?.args} />
             </BotCard>
             // @ts-ignore
-          )
-            : (
-              <BotMessage content={message.content} />
+          ) : // @ts-ignore
+            message.display?.name === 'transferLiveAgent' ? (
+
+              // < SpinnerMessage />
+              <BotCard>
+                {/* @ts-ignore */}
+                <TransferLiveAgentUI props={message.display?.props?.result} />
+              </BotCard>
+              // @ts-ignore
             )
+              : (
+                <BotMessage content={message.content} />
+              )
         ) : message.role === 'user' ? (
           // @ts-ignore
           <UserMessage showAvatar>{message.content}</UserMessage>

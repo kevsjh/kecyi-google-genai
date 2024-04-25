@@ -623,9 +623,10 @@ async function submitUserMessage(content: string) {
             2. If user want to sell a stock, check if the user own that stock in their portfolio, if they do not own that particular stock, inform them about it. 
             3. If the stock is available and you have the necessary details including symbol, stock price, and total shares owned from previous context or messages, call the \`showSellStock\` function to display the stock selling and shorting interface, allowing the user to review and confirm their action.
           
-          If the user requests, query or tasks needs to be routed to a different agent, you should
-            1. If user needs to talk to customer service agent, call the \`routeAgent\` function to route with the path '/client/agent/customerservice/chat' and name 'Customer Service Agent'.
-            2. If user needs to view their bank account transaction, report fraud transaction and any related transactions, call the \`routeAgent\` function to route with the path '/client/transactions' and name 'Transactions'.
+          If the user query or request for certain tasks that needs to be routed to a different agent, you should
+            1. If user needs to talk to customer service agent such as asking about insurance, promotion etc..., call the \`routeAgent\` function to route with the path '/client/agent/customerservice/chat' and name 'Customer Service Agent'.
+            2. Check if user needs to view, manage their bank account transaction, report fraud transaction and any related transactions, call the \`routeAgent\` function to route with the path '/client/transactions' and name 'Transactions'.
+            3. Do not make up any agent, path or name, beyond the provided exact path and name.
 
           Throughout the conversation, feel free to provide additional context, analysis, or recommendations based on your knowledge of the stock market.
 

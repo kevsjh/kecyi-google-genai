@@ -40,6 +40,7 @@ import { getUserAccountTransactionData, getUserInsurance, markTransactionAsRepor
 import { InsurancePurchase } from '@/components/transactions/insurance-purchase'
 import Link from 'next/link'
 import { createGoogleGenerativeAI } from '@/packages/google/google-provider'
+import RouteAgentUI from '@/components/route-agent/route-agent-ui'
 
 
 async function confirmInsurancePurchase(premium: boolean, price: number, insuranceType: 'travel' | 'life',
@@ -225,6 +226,22 @@ async function submitUserMessage(content: string) {
           temperature: 0,
 
           tools: {
+            routeAgent: {
+              description: 'Tool to route user to a different agent.',
+              parameters: z.object({
+                path: z
+                  .string()
+                  .describe(
+                    'The path to the agent to route the user to. e.g. /client/agent/stock/chat'
+                  ),
+                name: z
+                  .string()
+                  .describe(
+                    'The name of the agent to route the user to. e.g. Stock Agent.'
+                  ),
+
+              }),
+            },
             reportFraud: {
               description: 'Tool used to report a fraud transaction.',
               parameters: z.object({
@@ -282,6 +299,11 @@ async function submitUserMessage(content: string) {
           If user wants to purchase insurance, you should
             1. call the \`showPurchaseInsurance\` function to start the purchase process.
           
+          If the user query or request for certain tasks that needs to be routed to a different agent, you should
+            1. If user needs to talk to customer service agent such as asking about insurance, promotion etc..., call the \`routeAgent\` function to route with the path '/client/agent/customerservice/chat' and name 'Customer Service Agent'.
+            2. Check if user ask about trending stocks, current stock portfolio, purchase or sell stocks, call the \`routeAgent\` function to route with the path '/client/agent/stockagent/chat' and name 'Stock Agent'.
+            3. Do not make up any agent, path or name, beyond the provided exact path and name.
+
 
           Do not make up any information. Only provide information based on the user's bank account transaction data.
           If the user wants to complete an impossible task, respond that you are a demo and cannot do that.
@@ -331,6 +353,45 @@ async function submitUserMessage(content: string) {
           // before tools invocation is completed (show skeleton etc...)
           else if (type === 'tool-call') {
             const { toolName, args } = delta
+            if (toolName === 'routeAgent') {
+              uiStream.update(
+                <BotCard>
+
+                  <RouteAgentUI
+                    props={{
+                      path: args.path,
+                      name: args.name
+                    }}
+
+                  />
+                </BotCard>
+              )
+              aiState.done({
+                ...aiState.get(),
+                messages: [
+                  ...aiState.get().messages,
+                  {
+                    id: nanoid(),
+                    role: 'assistant',
+                    name: 'routeAgent',
+                    content: JSON.stringify({
+                      path: args.path,
+                      name: args.name,
+
+                    }),
+                    display: {
+                      name: 'routeAgent',
+                      props: {
+                        args: {
+                          ...args,
+
+                        }
+                      }
+                    }
+                  }
+                ]
+              })
+            }
 
 
           }
@@ -645,29 +706,19 @@ export const getUIStateFromAIState = (aiState: TransactionCopilotChat) => {
                   /> : <div>Something went wrong. Please try again later</div>
                 }
               </BotCard>
-            ) :
-              // @ts-ignore
-              message.display?.name === 'trendingStocks' ? (
+            ) :// @ts-ignore
+              message.display?.name === 'routeAgent' ? (
 
                 // < SpinnerMessage />
                 <BotCard>
                   {/* @ts-ignore */}
-                  <Stocks props={message.display?.props?.result} />
+                  <RouteAgentUI props={message.display?.props?.args} />
                 </BotCard>
                 // @ts-ignore
-              ) : message.display?.name === 'showStockPurchase' ? (
-                <BotCard>
-                  {
-                    // @ts-ignore
-                    message.display?.props?.args ? <Purchase
-                      // @ts-ignore
-                      props={message.display?.props?.args}
-                    /> : <div>Something went wrong. Please try again later</div>
-                  }
-                </BotCard>
-              ) : (
-                <BotMessage content={message.content} />
               )
+                : (
+                  <BotMessage content={message.content} />
+                )
         ) : message.role === 'user' ? (
           // @ts-ignore
           <UserMessage showAvatar>{message.content}</UserMessage>

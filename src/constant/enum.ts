@@ -18,6 +18,21 @@ export const stockAgentSuggestionMessages = [
 ]
 
 
+export const customerServiceAgentSuggestionMessages = [
+    {
+        heading: 'Tell me more about',
+        subheading: 'the latest insurance policy',
+        message: `Tell me about the latest insurance policy`
+    },
+    {
+        heading: 'What is the stock data',
+        subheading: 'for Google',
+        message: 'What is the stock data for Google'
+    }
+]
+
+
+
 
 export const portfolioCopilotSuggestionMessages = [
     {

@@ -3,11 +3,12 @@ import { firestoreAutoId, isAgentChatTypeValid, nanoid } from '@/lib/utils'
 import { StockAgentAI } from '@/lib/chat/stock-agent-ai-actions'
 import { notFound, redirect } from 'next/navigation'
 import { Agent } from 'http'
-import { AgentChatTypeEnum, stockAgentSuggestionMessages } from '@/constant/enum'
+import { AgentChatTypeEnum, customerServiceAgentSuggestionMessages, stockAgentSuggestionMessages } from '@/constant/enum'
 import { getAuthByCookie } from '@/lib/auth/action'
 import { Chat } from '@/components/chat/chat'
 import { StockAgentEmptyScreen } from '@/components/chat/empty-screens/stock-agent-empty-screen'
 import { CustomerServiceAgentAI } from '@/lib/chat/customer-service-agent-ai-actions'
+import { CustomerServiceAgentEmptyScreen } from '@/components/chat/empty-screens/customer-service-agent-empty-screen'
 
 
 
@@ -61,8 +62,8 @@ export default async function IndexPage({ params }: {
             <Chat id={id}
                 chatAgent={params.agent as AgentChatTypeEnum}
                 uiStateType={typeof StockAgentAI}
-                suggestionMessages={stockAgentSuggestionMessages}
-                emptyScreen={<StockAgentEmptyScreen />}
+                suggestionMessages={customerServiceAgentSuggestionMessages}
+                emptyScreen={<CustomerServiceAgentEmptyScreen />}
             />
         </CustomerServiceAgentAI>
 

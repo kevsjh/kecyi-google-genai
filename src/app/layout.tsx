@@ -30,6 +30,7 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
 
+
   openGraph: {
     title: {
       default: siteConfig.name,

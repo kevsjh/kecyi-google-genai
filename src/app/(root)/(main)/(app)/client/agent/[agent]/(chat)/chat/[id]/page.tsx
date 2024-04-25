@@ -1,6 +1,7 @@
 import { Chat } from "@/components/chat/chat";
+import { CustomerServiceAgentEmptyScreen } from "@/components/chat/empty-screens/customer-service-agent-empty-screen";
 import { StockAgentEmptyScreen } from "@/components/chat/empty-screens/stock-agent-empty-screen";
-import { AgentChatTypeEnum, stockAgentSuggestionMessages } from "@/constant/enum";
+import { AgentChatTypeEnum, customerServiceAgentSuggestionMessages, stockAgentSuggestionMessages } from "@/constant/enum";
 import { getAuthByCookie } from "@/lib/auth/action";
 import { CustomerServiceAgentAI } from "@/lib/chat/customer-service-agent-ai-actions";
 import { StockAgentAI } from "@/lib/chat/stock-agent-ai-actions";
@@ -77,8 +78,8 @@ export default async function IndexPage({ params }: {
                 initialMessages={chat.messages}
                 chatAgent={params.agent as AgentChatTypeEnum}
                 uiStateType={typeof StockAgentAI}
-                suggestionMessages={stockAgentSuggestionMessages}
-                emptyScreen={<StockAgentEmptyScreen />}
+                suggestionMessages={customerServiceAgentSuggestionMessages}
+                emptyScreen={<CustomerServiceAgentEmptyScreen />}
 
             />
         </CustomerServiceAgentAI>
