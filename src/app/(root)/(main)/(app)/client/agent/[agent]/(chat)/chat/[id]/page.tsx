@@ -2,6 +2,7 @@ import { Chat } from "@/components/chat/chat";
 import { StockAgentEmptyScreen } from "@/components/chat/empty-screens/stock-agent-empty-screen";
 import { AgentChatTypeEnum, stockAgentSuggestionMessages } from "@/constant/enum";
 import { getAuthByCookie } from "@/lib/auth/action";
+import { CustomerServiceAgentAI } from "@/lib/chat/customer-service-agent-ai-actions";
 import { StockAgentAI } from "@/lib/chat/stock-agent-ai-actions";
 import { getChat } from "@/lib/helper-actions/action";
 import { isAgentChatTypeValid } from "@/lib/utils";
@@ -61,6 +62,26 @@ export default async function IndexPage({ params }: {
 
             />
         </StockAgentAI>
+    } else if (chat.agentChatType?.toUpperCase() === AgentChatTypeEnum.CUSTOMERSERVICE) {
+        return <CustomerServiceAgentAI
+            initialAIState={{
+                chatId: chat.id,
+                messages: chat.messages,
+                interactions: [],
+                agentChatType: chat.agentChatType
+            }}
+        >
+            <Chat
+                id={chat.id}
+
+                initialMessages={chat.messages}
+                chatAgent={params.agent as AgentChatTypeEnum}
+                uiStateType={typeof StockAgentAI}
+                suggestionMessages={stockAgentSuggestionMessages}
+                emptyScreen={<StockAgentEmptyScreen />}
+
+            />
+        </CustomerServiceAgentAI>
     } else {
         notFound()
     }

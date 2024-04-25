@@ -7,6 +7,7 @@ import { AgentChatTypeEnum, stockAgentSuggestionMessages } from '@/constant/enum
 import { getAuthByCookie } from '@/lib/auth/action'
 import { Chat } from '@/components/chat/chat'
 import { StockAgentEmptyScreen } from '@/components/chat/empty-screens/stock-agent-empty-screen'
+import { CustomerServiceAgentAI } from '@/lib/chat/customer-service-agent-ai-actions'
 
 
 
@@ -50,6 +51,20 @@ export default async function IndexPage({ params }: {
                 emptyScreen={<StockAgentEmptyScreen />}
             />
         </StockAgentAI>
+
+    } else if (params.agent?.toUpperCase() === AgentChatTypeEnum.CUSTOMERSERVICE) {
+
+        return <CustomerServiceAgentAI initialAIState={{
+            chatId: id, interactions: [], messages: [],
+            agentChatType: params.agent as AgentChatTypeEnum
+        }}>
+            <Chat id={id}
+                chatAgent={params.agent as AgentChatTypeEnum}
+                uiStateType={typeof StockAgentAI}
+                suggestionMessages={stockAgentSuggestionMessages}
+                emptyScreen={<StockAgentEmptyScreen />}
+            />
+        </CustomerServiceAgentAI>
 
     } else {
         notFound()
