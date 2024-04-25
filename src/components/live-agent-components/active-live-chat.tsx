@@ -24,12 +24,21 @@ export default function AdminActiveLiveChat({ liveAgentDoc, currentMessages, pan
 
     return <div className="relative  p-4 flex h-full w-full flex-col gap-6 items-center overflow-hidden">
 
-        <Link target="_blank" href={
-            panel === 'admin' ? `/client/agent/liveagent/${liveAgentDoc.id}` : `/admin/inbox/${liveAgentDoc.id}`
+        <div className="flex flex-wrap gap-2">
+            <Link target="_blank" href={
+                panel === 'admin' ? `/client/agent/liveagent/${liveAgentDoc.id}` : `/admin/inbox/${liveAgentDoc.id}`
 
-        }><Badge>{
-            panel === 'admin' ? 'Simulate Real Time Client Chat Here' : 'Simulate Real Time Admin Chat Here'
-        }</Badge></Link>
+            }><Badge>{
+                panel === 'admin' ? 'Simulate Real Time Client Chat Here' : 'Simulate Real Time Admin Chat Here'
+            }</Badge></Link>
+
+            {
+                panel === 'admin' && <Link href={`/admin/inbox/${liveAgentDoc.id}?copilot=true`}><Badge>
+                    Access Copilot
+                </Badge></Link>
+            }
+
+        </div>
 
         <div className="pb-[200px] h-full w-full"> <ActiveLiveChatList panel={panel} currentMessages={currentMessages} id={liveAgentDoc.id} /></div>
         <div className="absolute flex justify-center inset-x-0   bg-white/90 bottom-4 w-full duration-300 ease-in-out  dark:from-10%">

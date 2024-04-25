@@ -56,7 +56,7 @@ export default async function IndexPage({ params, searchParams }: {
             <div className=" hidden absolute md:inline-flex w-full h-full  " >
                 <ResizablePanelGroup direction="horizontal" >
                     <ResizablePanel
-                        minSize={50}
+                        minSize={35}
                     >
                         <AdminActiveLiveChat
                             panel='admin'

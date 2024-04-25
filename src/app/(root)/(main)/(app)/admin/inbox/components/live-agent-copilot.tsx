@@ -5,10 +5,11 @@ import { TransactionCopilotAI } from "@/lib/chat/transaction-copilot-actions";
 import { getAuthByCookie } from "@/lib/auth/action";
 import { redirect } from "next/navigation";
 import { Chat } from "@/components/chat/chat";
-import { transactionCopilotSuggestionMessages } from "@/constant/enum";
+import { liveAgentCopilotSuggestionMessages, transactionCopilotSuggestionMessages } from "@/constant/enum";
 import CloseCopilotButton from "../../../client/transactions/components/close-copilot";
 import { LiveAgentCopilotAI } from "@/lib/chat/live-agent-copilot-ai-actions";
 import { CopilotChat } from "@/components/chat/copilot-chat";
+import { LiveAgentCopilotEmptyScreen } from "@/components/chat/empty-screens/liveagent-copilot-empty-screen";
 
 export default async function LiveAgentCopilotUI() {
     const session = await getAuthByCookie()
@@ -37,11 +38,11 @@ export default async function LiveAgentCopilotUI() {
         >
             <CopilotChat
                 id={''}
-
+                emptyScreen={<LiveAgentCopilotEmptyScreen />}
                 initialMessages={[]}
                 uiStateType={typeof LiveAgentCopilotAI}
                 chatListClassname="max-w-xl w-full"
-                suggestionMessages={transactionCopilotSuggestionMessages}
+                suggestionMessages={liveAgentCopilotSuggestionMessages}
 
             />
         </LiveAgentCopilotAI>

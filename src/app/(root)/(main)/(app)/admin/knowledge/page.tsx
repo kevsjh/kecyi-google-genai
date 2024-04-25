@@ -13,72 +13,61 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { FilePdf, LinkSimple } from "@phosphor-icons/react/dist/ssr";
 
+import {
+    ResizableHandle,
+    ResizablePanel,
+    ResizablePanelGroup,
+} from "@/components/ui/resizable"
+import KnowledgeHubBody from "./components/knowledge-hub-body";
+import LiveAgentCopilotUI from "../inbox/components/live-agent-copilot";
 
-export default async function Page() {
 
+export default async function Page({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+    const showCopilot = (searchParams?.copilot as string)?.toLowerCase() === 'true'
     const { contents } = await getUseAdminKnowledge()
 
-    return <div className="flex  flex-col h-full p-6  gap-6  w-full">
-        <div className="flex items-center justify-between"><h1 className="text-lg md:text-3xl font-semibold">Knowledge Hub</h1>
-            <AddContentDialog />
+    return <div className="relative h-full flex overflow-hidden">
+
+
+
+        <div className=" md:hidden w-full h-full">
+            <ResizablePanelGroup direction="vertical" >
+                <ResizablePanel
+                    minSize={30}
+                >
+                    <KnowledgeHubBody contents={contents} />
+                </ResizablePanel>
+                {
+                    showCopilot && <>
+                        <ResizableHandle withHandle />
+                        <ResizablePanel
+                            minSize={40}
+                        >
+                            <LiveAgentCopilotUI />
+                        </ResizablePanel></>
+                }
+            </ResizablePanelGroup>
 
         </div>
-        <Table>
-
-            <TableHeader>
-                <TableRow>
-                    <TableHead className="">Title</TableHead>
-                    <TableHead>File Type</TableHead>
-                    {/* <TableHead>Method</TableHead> */}
-                    <TableHead className="text-right">Date</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
+        <div className=" hidden absolute md:inline-flex w-full h-full  " >
+            <ResizablePanelGroup direction="horizontal" >
+                <ResizablePanel
+                    minSize={35}
+                >
+                    <KnowledgeHubBody contents={contents} />
+                </ResizablePanel>
                 {
-                    contents.map(content => {
-                        return (
-                            <TableRow key={content.id}>
-                                <TableCell>
-                                    <div className="flex items-center gap-2">
-                                        {
-                                            content.type === 'web' && <Link
-                                                target="_blank"
-                                                href={`${content.userFilename}`}
-                                            >
-                                                <LinkSimple size={20} />
-                                            </Link>
-                                        }
-                                        <Link
-                                            href={`/admin/knowledge/${content.id}`}>
-                                            {content.userFilename}
-                                        </Link>
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    {
-                                        content.type &&
-                                        <Badge>
-                                            <Link href={`/admin/knowledge/${content.id}`}>
-                                                {
-                                                    content?.type?.charAt(0)?.toUpperCase() + content?.type?.slice(1)
-                                                }
-                                            </Link>
-                                        </Badge>
-                                    }
-                                </TableCell>
-                                {/* <TableCell>{content.uid}</TableCell> */}
-                                <TableCell className="text-right">
-                                    <Link href={`/admin/knowledge/${content.id}`}>
-                                        {content.createdAt.toDateString()}
-                                    </Link>
-
-                                </TableCell>
-                            </TableRow>
-                        );
-                    })
+                    showCopilot && <>
+                        <ResizableHandle withHandle />
+                        <ResizablePanel
+                            minSize={20}
+                        >  <LiveAgentCopilotUI />
+                        </ResizablePanel></>
                 }
-            </TableBody>
-        </Table>
+            </ResizablePanelGroup>
+        </div>
+
+
 
     </div>
 }

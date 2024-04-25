@@ -20,14 +20,29 @@ export const stockAgentSuggestionMessages = [
 
 export const customerServiceAgentSuggestionMessages = [
     {
-        heading: 'Tell me more about',
-        subheading: 'the latest insurance policy',
-        message: `Tell me about the latest insurance policy`
+        heading: 'What are the ',
+        subheading: 'top credit cards',
+        message: 'What are the best credit cards in singapore'
     },
     {
-        heading: 'What is the stock data',
-        subheading: 'for Google',
-        message: 'What is the stock data for Google'
+        heading: 'I want to purchase',
+        subheading: 'stocks',
+        message: 'I want to purchase stocks'
+    }
+]
+
+
+
+export const liveAgentCopilotSuggestionMessages = [
+    {
+        heading: 'What does',
+        subheading: 'FWD insurance policy cover',
+        message: `What does FWD insurance policy cover`
+    },
+    {
+        heading: 'What are the ',
+        subheading: 'top credit cards',
+        message: 'What are the best credit cards in singapore'
     }
 ]
 
