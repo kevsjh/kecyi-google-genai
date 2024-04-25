@@ -35,6 +35,7 @@ import { loadPDFAction } from "@/lib/vector-search/load-pdf"
 import { uploadPDFObject } from "@/lib/storage/upload-storage-object"
 import { useAuthContext } from "@/context/auth-context"
 import { CircleNotch } from "@phosphor-icons/react";
+import { useRouter } from "next/navigation";
 
 
 
@@ -130,6 +131,7 @@ export function AddContentDialog() {
     const [url, setURL] = React.useState<string>('')
     const [loading, setLoading] = React.useState(false)
     const { auth } = useAuthContext()
+    const router = useRouter()
 
     const handleURLSubmit = (url: string) => {
         if (url.length === 0) {
@@ -184,9 +186,12 @@ export function AddContentDialog() {
             // upload the file
 
             setLoading(false)
-
+            router.refresh()
             toast.success('PDF uploaded successfully. The content is now available to the customer service AI agent.')
+
             setOpen(false)
+
+
         } catch (err) {
             setLoading(false)
             console.error('Error loading pdf', err)

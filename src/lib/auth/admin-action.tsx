@@ -8,6 +8,43 @@ import { cookies } from "next/headers"
 
 initFirebaseAdminApp()
 
+
+export async function getContentById(id: string) {
+    const sessionObj = cookies().get('session')
+    const session = sessionObj?.value
+    if (session === undefined || session?.length === 0) {
+        return {
+            contents: []
+        }
+    }
+
+    try {
+        const decodedClaims = await firebaseAdminAuth.verifySessionCookie(session, true)
+        const uid = decodedClaims.uid
+        const colRef = firebaseAdminFirestore.collection('contents')
+
+        const docRef = colRef.doc(id)
+        const doc = await docRef.get()
+        const data = doc.data()
+        if (!doc.exists || data === undefined) {
+            return {
+                objectURL: undefined
+            }
+        }
+        return {
+            objectURL: data?.objectURL
+        }
+
+    } catch (err) {
+        console.error('Error in getContentById', err)
+
+        return {
+            objectURL: undefined
+        }
+    }
+
+}
+
 export async function getUseAdminKnowledge() {
     const sessionObj = cookies().get('session')
     const session = sessionObj?.value

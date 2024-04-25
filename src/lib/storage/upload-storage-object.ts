@@ -20,12 +20,12 @@ export async function uploadPDFObject({ selectedFile, uid }: { selectedFile: Fil
         // staticFirebaseBucketStorage
 
         const metadata: UploadMetadata = {
-            contentType: 'pdf',
+            contentType: 'application/pdf',
             contentDisposition: `inline; filename=${selectedFile.name}`,
             customMetadata: {
                 filename: selectedFile.name,
                 userFilename: selectedFile.name,
-                contentType: 'pdf',
+                contentType: 'application/pdf',
                 uid
             }
         }
