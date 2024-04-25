@@ -1,7 +1,5 @@
 import { getUserTotalTransaction } from "@/lib/auth/action";
-import ThisMonthTotalUsage from "./components/this-month-usage";
-import TotalBalance from "./components/total-balance";
-import TransactionTable from "./components/transaction-table";
+
 import {
     ResizableHandle,
     ResizablePanel,
