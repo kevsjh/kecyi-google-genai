@@ -97,40 +97,7 @@ export function PromptForm({
         }
       }}
     >
-      <input
-        type="file"
-        className="hidden"
-        id="file"
-        ref={fileRef}
-        onChange={async event => {
-          if (!event.target.files) {
-            toast.error('No file selected')
-            return
-          }
 
-          const file = event.target.files[0]
-
-          if (file.type.startsWith('video/')) {
-            const responseMessage = await describeImage('')
-            setMessages((currentMessages: any) => [
-              ...currentMessages,
-              responseMessage
-            ])
-          } else {
-            const reader = new FileReader()
-            reader.readAsDataURL(file)
-
-            reader.onloadend = async () => {
-              const base64String = reader.result
-              const responseMessage = await describeImage(base64String)
-              setMessages((currentMessages: any) => [
-                ...currentMessages,
-                responseMessage
-              ])
-            }
-          }
-        }}
-      />
       <div className="relative flex items-center  max-h-60 w-full grow flex-col  overflow-hidden bg-zinc-100 px-12 sm:rounded-2xl sm:px-12">
         <AudioRecorder
           setLoading={setAudioLoading}

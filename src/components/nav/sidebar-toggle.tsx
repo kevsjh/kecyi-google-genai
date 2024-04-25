@@ -17,6 +17,8 @@ export function SidebarToggle() {
   React.useEffect(() => {
     if (pathname.includes('chat')) {
       setShowSidebar(true)
+    } else if (pathname?.toLowerCase().includes('/admin/inbox')) {
+      setShowSidebar(true)
     } else {
       setShowSidebar(false)
     }

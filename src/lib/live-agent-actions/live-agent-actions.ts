@@ -59,6 +59,92 @@ export async function sendLiveAgentRequest({ chatHistory }: { chatHistory: strin
 }
 
 
+
+
+export async function sendLiveAgentMessage({ id, message, role }: { id: string, message: string, role: 'client' | 'admin' }) {
+    const sessionObj = cookies().get('session')
+    const session = sessionObj?.value
+    if (session === undefined || session?.length === 0) {
+        return {
+            status: false
+        }
+    }
+
+    try {
+        const decodedClaims = await firebaseAdminAuth.verifySessionCookie(session, true)
+        const uid = decodedClaims.uid
+
+        const liveAgentMessageRef = firebaseAdminFirestore.collection('liveagent').doc(id).collection('messages').doc()
+        const liveAgentMessageId = liveAgentMessageRef.id
+
+
+        await liveAgentMessageRef.set({
+            createdAt: new Date(),
+            id: liveAgentMessageId,
+            message: message,
+            role: role,
+            uid,
+        })
+
+        return {
+            status: true
+        }
+
+
+    } catch (err) {
+        console.error('Error sending message', err)
+        return {
+            status: false
+        }
+    }
+
+
+
+}
+
+
+
+
+
+export async function updateLiveAgentRequest({ id, status }: { id: string, status: 'active' | 'ended' }) {
+    try {
+        const sessionObj = cookies().get('session')
+        const session = sessionObj?.value
+        if (session === undefined || session?.length === 0) {
+            return {
+                status: false
+            }
+        }
+        const decodedClaims = await firebaseAdminAuth.verifySessionCookie(session, true)
+        const uid = decodedClaims.uid
+
+        const liveAgentRequesDocRef = firebaseAdminFirestore.collection('liveagent').doc(id)
+
+
+        await firebaseAdminFirestore.runTransaction(async (transaction) => {
+            transaction.update(liveAgentRequesDocRef, {
+                status: status,
+                createdAt: new Date()
+            })
+        })
+
+
+        return {
+            status: true
+        }
+
+
+    } catch (err) {
+        console.error('Error sending live agent request', err)
+        return {
+            status: false
+        }
+
+    }
+}
+
+
+
 export async function getLiveAgentChats() {
     try {
         const sessionObj = cookies().get('session')
@@ -83,7 +169,7 @@ export async function getLiveAgentChats() {
             const data = doc.data()
 
             const liveAgentDoc: ILiveAgentDoc = {
-                createdAt: data.createdAt,
+                createdAt: data.createdAt?.toDate(),
                 id: data.id,
                 status: data.status,
                 summarizeChat: data.summarizeChat,
@@ -97,6 +183,53 @@ export async function getLiveAgentChats() {
     } catch (err) {
         console.error('Error getting live agent chats', err)
         return []
+    }
+
+}
+
+
+
+
+export async function getLiveAgentChatsById(id: string) {
+    try {
+        const sessionObj = cookies().get('session')
+        const session = sessionObj?.value
+        if (session === undefined || session?.length === 0) {
+            return undefined
+        }
+        const decodedClaims = await firebaseAdminAuth.verifySessionCookie(session, true)
+        const uid = decodedClaims.uid
+
+        const liveAgentDocRef = firebaseAdminFirestore.collection('liveagent').doc(id)
+
+        const liveAgentDoc = await liveAgentDocRef.get()
+
+        const data = liveAgentDoc.data()
+        if (data === undefined) {
+            return undefined
+        }
+
+        if (data?.uid !== uid) {
+            return undefined
+        }
+
+
+        const liveAgentDocData: ILiveAgentDoc = {
+            createdAt: data.createdAt?.toDate(),
+            id: data.id,
+            status: data.status,
+            summarizeChat: data.summarizeChat,
+            uid: data.uid
+        }
+
+
+        return liveAgentDocData
+
+
+
+    } catch (err) {
+        console.error('Error getting live agent chats', err)
+        return undefined
     }
 
 }

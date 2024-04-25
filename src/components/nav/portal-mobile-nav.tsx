@@ -57,7 +57,7 @@ export function PortalMobileNav({ items }: {
                             </Link>
                         })
                     }
-                    <SwitchPortalIcon />
+                    <SwitchPortalIcon onHeader={true} />
                 </div>
             </SheetContent>
         </Sheet>

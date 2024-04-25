@@ -17,11 +17,12 @@ export default async function ClientRootLayout({
     }
 
 
+
     return (
         <div className="flex min-h-screen w-full flex-col ">
-            <PortalSideNav items={adminSideNavItems} />
+            <PortalSideNav items={clientSideNavItems} />
             <div className="flex flex-col   h-dvh sm:pl-14">
-                <AppHeader items={adminSideNavItems} />
+                <AppHeader items={clientSideNavItems} />
                 {children}
             </div>
         </div>

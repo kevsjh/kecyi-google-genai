@@ -1,4 +1,4 @@
-import { AdminInboxSidebar } from "@/components/nav/admin-inbox-sidebar";
+import { AdminInboxSidebar } from "@/app/(root)/(main)/(app)/admin/inbox/components/admin-inbox-sidebar";
 import { getLiveAgentChats } from "@/lib/live-agent-actions/live-agent-actions";
 import { child } from "firebase/database";
 
@@ -9,10 +9,16 @@ export default async function ClientRootLayout({
 }>) {
 
     const liveAgentDocs = await getLiveAgentChats()
+
     return (
         <div className="relative  h-full flex  overflow-hidden">
             <AdminInboxSidebar liveAgentDocs={liveAgentDocs} />
-            {children}
+            <div
+                className="group  w-full overflow-auto pl-0 peer-[[data-state=open]]:lg:pl-[220px]"
+
+            >{children}
+            </div>
+
         </div>
     )
 }

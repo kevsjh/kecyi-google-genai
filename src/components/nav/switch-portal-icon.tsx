@@ -7,7 +7,7 @@ import Link from "next/link"
 import { Briefcase, Person } from "@phosphor-icons/react"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
-export default function SwitchPortalIcon() {
+export default function SwitchPortalIcon({ onHeader = false }: { onHeader?: boolean }) {
     const isDesktop = useMediaQuery('(min-width: 768px)')
     const pathname = usePathname()
 
@@ -21,7 +21,7 @@ export default function SwitchPortalIcon() {
 
 
 
-    if (!isDesktop) {
+    if (!isDesktop && onHeader) {
         return <Link
             href={isClient ? '/admin' : '/client'}
             className="flex items-center text-sm gap-1"
