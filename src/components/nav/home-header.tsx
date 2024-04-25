@@ -74,41 +74,7 @@ function BreadcrumbMenu() {
   </Breadcrumb>
 }
 
-// function UserOrLogin() {
-//   const { auth } = useAuthContext()
-//   return (
-//     <>
-//       {auth.currentUser ? (
-//         <>
-//           <SidebarMobile>
-//             <ChatHistory userId={auth.currentUser.uid}
-
-
-
-//             />
-//           </SidebarMobile>
-//           <SidebarToggle />
-//         </>
-//       ) : (
-//         <Link href="/new" rel="nofollow" className='w-fit h-fit p-2 bg-primary rounded-lg'>
-//           <Smiley size={20} color='white' />
-//         </Link>
-//       )}
-//       <div className="flex items-center">
-//         <IconSeparator className="size-6 text-zinc-200" />
-//         {auth.currentUser ? (
-//           <UserMenu />
-//         ) : (
-//           <Button variant="link" asChild className="-ml-2">
-//             <Link href="/login">Login</Link>
-//           </Button>
-//         )}
-//       </div>
-//     </>
-//   )
-// }
-
-export function AppHeader({ items }: {
+export function HomeHeader({ items }: {
   items?: {
     title: string;
     path: string;
@@ -116,7 +82,7 @@ export function AppHeader({ items }: {
   }[]
 }) {
   return (
-    <header className="sticky  border-b top-0 z-50 flex items-center justify-between w-full h-12 px-4 shrink-0 bg-transparent">
+    <header className="fixed border-b top-0 z-50 flex items-center justify-between w-full h-12 px-4 shrink-0 bg-transparent">
       <div className="flex items-center">
         <React.Suspense fallback={<div className="flex-1 overflow-auto" />}>
           <div className='flex gap-2 items-center '>

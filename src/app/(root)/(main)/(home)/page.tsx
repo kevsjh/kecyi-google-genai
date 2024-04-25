@@ -12,9 +12,9 @@ import AccessPortalButton from "../_components/access-portal";
 
 export default function Home() {
   return (
-    <main className=" flex w-full  h-full gap-4 flex-col items-center justify-between py-6">
+    <main className=" flex w-full h-full  flex-col items-center justify-between ">
 
-      <div className=" min-h-screen pt-8 lg:pt-4 flex w-full h-full  flex-col gap-8 items-center">
+      <div className=" bg-cover bg-[url('/assets/hero.png')]  min-h-screen flex w-full h-full  flex-col gap-8 items-center">
         <Badge className="border border-secondary font-medium text-sm flex gap-1 items-center">
 
           Google Cloud GenAI APAC 2024
@@ -31,6 +31,7 @@ export default function Home() {
         <AccessPortalButton />
 
       </div>
+
 
     </main>
   );

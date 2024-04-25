@@ -4,6 +4,7 @@ export const maxDuration = 180;
 
 
 import { AppHeader } from "@/components/nav/app-header";
+import { HomeHeader } from "@/components/nav/home-header";
 import RootProviders from "@/providers/root-providers";
 export default function Layout({
     children,
@@ -11,8 +12,8 @@ export default function Layout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex flex-col ">
-            <AppHeader />
+        <div className="relative">
+            <HomeHeader />
             {children}
         </div>
     );
