@@ -37,8 +37,8 @@ export const portfolioCopilotSuggestionMessages = [
 
 export const transactionCopilotSuggestionMessages = [
     {
-        heading: 'Report Fraud Transaction',
-        subheading: '',
+        heading: 'Report',
+        subheading: 'Fraud Transaction',
         message: `report a fraud transaction`
     },
     {

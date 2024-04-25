@@ -601,8 +601,6 @@ async function submitUserMessage(content: string) {
           else if (type === 'tool-call') {
             const { toolName, args } = delta
 
-
-
             if (toolName === 'routeAgent') {
               uiStream.update(
                 <BotCard>

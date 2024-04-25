@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Icons } from "../icon";
-import { InstagramLogo } from "@phosphor-icons/react/dist/ssr";
+import { InstagramLogo, Smiley } from "@phosphor-icons/react/dist/ssr";
 
 export default function BottomFooter() {
     return <div className="bg-indigo-purple w-full py-6   rounded-t-3xl">
@@ -9,8 +9,11 @@ export default function BottomFooter() {
 
                 <div className="flex col-span-1  flex-col gap-2">
                     <Link href={'/'} className="flex items-center gap-2 text-primary text-2xl font-medium">
-                        <Icons.Logo className="w-8 h-8 fill-primary" />
-                        newroom
+
+                        <div className="flex bg-primary p-2 items-center justify-center gap-2 rounded-full">
+                            <Smiley size={25} color='white' className="transition-all group-hover:scale-110" />
+                        </div>
+                        genai.kecyi.com
                     </Link>
                     <p className="text-primary">AI Interior Design Assistant</p>
 

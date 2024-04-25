@@ -29,6 +29,7 @@ import { toast } from "sonner"
 import { signInWithEmailLink } from "firebase/auth"
 import { Label } from "../ui/label"
 import { Input } from "../ui/input"
+import { Smiley } from "@phosphor-icons/react"
 
 function UsernameForm({ className, setOpen }: {
     setOpen: React.Dispatch<React.SetStateAction<boolean>>
@@ -145,7 +146,10 @@ export function CompleteSignInDialog() {
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px] ">
                     <DialogHeader className="flex flex-col gap-2 items-center justify-center">
-                        <Icons.Logo className="w-8 h-8 fill-primary" />
+
+                        <div className="flex bg-primary p-2 items-center justify-center gap-2 rounded-full">
+                            <Smiley size={25} color='white' className="transition-all group-hover:scale-110" />
+                        </div>
                         <DialogTitle className="text-primary">Get Started in Seconds</DialogTitle>
                         <DialogDescription className="text-center">
                             Use your email or social sign in to create a free account.
@@ -164,7 +168,10 @@ export function CompleteSignInDialog() {
             </DrawerTrigger>
             <DrawerContent className="pb-4">
                 <DrawerHeader className="text-center flex flex-col gap-2 items-center">
-                    <Icons.Logo className="w-8 h-8 fill-primary" />
+
+                    <div className="flex bg-primary p-2 items-center justify-center gap-2 rounded-full">
+                        <Smiley size={25} color='white' className="transition-all group-hover:scale-110" />
+                    </div>
                     <DrawerTitle>Get Started in Seconds</DrawerTitle>
                     <DrawerDescription>
                         Use your email or social sign in to create a free account.

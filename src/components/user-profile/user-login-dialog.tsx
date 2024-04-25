@@ -27,7 +27,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Icons } from "../icon"
-import { CheckFat, GithubLogo, GoogleLogo } from "@phosphor-icons/react"
+import { CheckFat, GithubLogo, GoogleLogo, Smiley } from "@phosphor-icons/react"
 import { useAuthContext } from "@/context/auth-context"
 import { GithubAuthProvider, GoogleAuthProvider, signInWithPopup } from "firebase/auth"
 import { set } from "firebase/database"
@@ -263,7 +263,10 @@ export function UserLoginDialog() {
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px] ">
                     <DialogHeader className="flex flex-col gap-2 items-center justify-center">
-                        <Icons.Logo className="w-8 h-8 fill-primary" />
+
+                        <div className="flex bg-primary p-2 items-center justify-center gap-2 rounded-full">
+                            <Smiley size={25} color='white' className="transition-all group-hover:scale-110" />
+                        </div>
                         <DialogTitle className="text-primary">Get Started in Seconds</DialogTitle>
 
                     </DialogHeader>
@@ -285,7 +288,10 @@ export function UserLoginDialog() {
             </DrawerTrigger>
             <DrawerContent className="pb-4">
                 <DrawerHeader className="text-center flex flex-col gap-2 items-center">
-                    <Icons.Logo className="w-8 h-8 fill-primary" />
+
+                    <div className="flex bg-primary p-2 items-center justify-center gap-2 rounded-full">
+                        <Smiley size={25} color='white' className="transition-all group-hover:scale-110" />
+                    </div>
                     <DrawerTitle>Get Started in Seconds</DrawerTitle>
 
                 </DrawerHeader>
