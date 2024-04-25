@@ -1,35 +1,37 @@
-import { cookies, headers } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
+'use server'
 
-export const runtime = 'nodejs'
+// server side request
+// simulate real life api request
+export default async function getTrendingStocksServerSide() {
+    try {
+        // get random 3 trending tickers
+        const randomIndices = Array.from({ length: 3 }, () => Math.floor(Math.random() * sampleTrendingTickers.length));
+        // get the ticker from the random index
+        // make sure the randomIndices are unique
 
-export async function GET(request: NextRequest, response: NextResponse) {
+        const data: { ticker: string, name: string }[] = []
 
-    // get random 3 trending tickers
-    const randomIndices = Array.from({ length: 3 }, () => Math.floor(Math.random() * sampleTrendingTickers.length));
-    // get the ticker from the random index
-    // make sure the randomIndices are unique
+        for (const randomIndex of randomIndices) {
+            const ticker = sampleTrendingTickers[randomIndex]
+            // push data only if ticker has not exists in data
+            if (!data.find((d) => d.ticker === ticker.Symbol)) {
 
-    const data: { ticker: string, name: string }[] = []
-
-    for (const randomIndex of randomIndices) {
-        const ticker = sampleTrendingTickers[randomIndex]
-        // push data only if ticker has not exists in data
-        if (!data.find((d) => d.ticker === ticker.Symbol)) {
-
-            data.push({
-                'ticker': ticker.Symbol,
-                'name': ticker.Shortname
-            })
+                data.push({
+                    'ticker': ticker.Symbol,
+                    'name': ticker.Shortname
+                })
+            }
         }
+        return data
+    } catch (err) {
+        console.error('Error in getTrendingStocks', err)
+
+        return undefined
     }
 
-
-    return NextResponse.json({
-        data,
-    }, { status: 200 });
-
 }
+
+
 
 
 const sampleTrendingTickers = [

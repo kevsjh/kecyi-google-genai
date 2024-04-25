@@ -52,6 +52,7 @@ import { ListStockPortfolioSkeleton } from '@/components/stocks/list-stock-portf
 import { ListStockPortfolio } from '@/components/stocks/list-stock-portfolio'
 import { SellStock } from '@/components/stocks/sell-stock'
 import { createGoogleGenerativeAI } from '@/packages/google/google-provider'
+import RouteAgentUI from '@/components/route-agent/route-agent-ui'
 
 
 async function confirmPurchase(symbol: string, price: number, amount: number, numberOfShares: number) {
@@ -529,6 +530,22 @@ async function submitUserMessage(content: string) {
                 return res
               },
             },
+            routeAgent: {
+              description: 'Tool to route user to a different agent.',
+              parameters: z.object({
+                path: z
+                  .string()
+                  .describe(
+                    'The path to the agent to route the user to. e.g. /client/agent/stock/chat'
+                  ),
+                name: z
+                  .string()
+                  .describe(
+                    'The name of the agent to route the user to. e.g. Stock Agent.'
+                  ),
+
+              }),
+            },
             showStockPurchase: {
               description: 'Show stock price and the UI to purchase a stock. Use this if the user wants to purchase or buy stock.',
               parameters: z.object({
@@ -588,7 +605,7 @@ async function submitUserMessage(content: string) {
           You are a stock trading assistant AI. Your role is to provide information and guidance to help users make informed decisions about buying and selling stocks.
           
           You have access to real-time stock market data and can provide the latest prices, trends, and analysis for individual stocks or the overall market.
-          You also have access to help user to purchase and sell stocks.
+          You also have access to help user to purchase and sell stocks. You may also route the user to the relevant agent based on their tasks.
 
           When the user wants to purchase or buy stocks, you should:
           
@@ -600,12 +617,16 @@ async function submitUserMessage(content: string) {
          
           To showcase trending or popular stocks, call the \`trendingStocks\` function, which will provide a list of stocks that are currently experiencing significant trading volume or price movements.
          
-          When the user see their current portfolio, or wants to sell or short stocks, you should:
+          When the user view their stock portfolio, or wants to sell or short stocks, you should:
           
             1. Verify that you have the necessary information from previous messages, including the user entire stock portfolio, stock symbol, and the number of shares the user wants to sell. If you do not have the necessary information, call the \`showUserPortfolio\` function and retrieve the necessary details.
             2. If user want to sell a stock, check if the user own that stock in their portfolio, if they do not own that particular stock, inform them about it. 
             3. If the stock is available and you have the necessary details including symbol, stock price, and total shares owned from previous context or messages, call the \`showSellStock\` function to display the stock selling and shorting interface, allowing the user to review and confirm their action.
           
+          If the user requests, query or tasks needs to be routed to a different agent, you should
+            1. If user needs to talk to customer service agent, call the \`routeAgent\` function to route with the path '/client/agent/customerservice/chat' and name 'Customer Service Agent'.
+            2. If user needs to view their bank account transaction, report fraud transaction and any related transactions, call the \`routeAgent\` function to route with the path '/client/transactions' and name 'Transactions'.
+
           Throughout the conversation, feel free to provide additional context, analysis, or recommendations based on your knowledge of the stock market.
 
           If the user wants to complete an impossible task, respond that you are a demo and cannot do that.
@@ -623,6 +644,7 @@ async function submitUserMessage(content: string) {
         let llmToolInvoked = false
 
         for await (const delta of result.fullStream) {
+          console.log('delta', delta)
 
           // check if tool-call is invoked
           const { type } = delta
@@ -679,6 +701,45 @@ async function submitUserMessage(content: string) {
               )
             }
 
+            else if (toolName === 'routeAgent') {
+              uiStream.update(
+                <BotCard>
+
+                  <RouteAgentUI
+                    props={{
+                      path: args.path,
+                      name: args.name
+                    }}
+
+                  />
+                </BotCard>
+              )
+              aiState.done({
+                ...aiState.get(),
+                messages: [
+                  ...aiState.get().messages,
+                  {
+                    id: nanoid(),
+                    role: 'assistant',
+                    name: 'routeAgent',
+                    content: JSON.stringify({
+                      path: args.path,
+                      name: args.name,
+
+                    }),
+                    display: {
+                      name: 'routeAgent',
+                      props: {
+                        args: {
+                          ...args,
+
+                        }
+                      }
+                    }
+                  }
+                ]
+              })
+            }
             else if (toolName === 'showStockPurchase') {
 
               uiStream.update(
@@ -1058,30 +1119,40 @@ export const getUIStateFromAIState = (aiState: Chat) => {
                   <Stocks props={message.display?.props?.result} />
                 </BotCard>
                 // @ts-ignore
-              )
-                :
+              ) :
                 // @ts-ignore
-                message.display?.name === 'showSellStock' ? (
+                message.display?.name === 'routeAgent' ? (
 
                   // < SpinnerMessage />
                   <BotCard>
                     {/* @ts-ignore */}
-                    <SellStock props={message.display?.props?.args} />
+                    <RouteAgentUI props={message.display?.props?.args} />
                   </BotCard>
                   // @ts-ignore
-                ) : message.display?.name === 'showStockPurchase' ? (
-                  <BotCard>
-                    {
-                      // @ts-ignore
-                      message.display?.props?.args ? <Purchase
-                        // @ts-ignore
-                        props={message.display?.props?.args}
-                      /> : <div>Something went wrong. Please try again later</div>
-                    }
-                  </BotCard>
-                ) : (
-                  <BotMessage content={message.content} />
                 )
+                  :
+                  // @ts-ignore
+                  message.display?.name === 'showSellStock' ? (
+
+                    // < SpinnerMessage />
+                    <BotCard>
+                      {/* @ts-ignore */}
+                      <SellStock props={message.display?.props?.args} />
+                    </BotCard>
+                    // @ts-ignore
+                  ) : message.display?.name === 'showStockPurchase' ? (
+                    <BotCard>
+                      {
+                        // @ts-ignore
+                        message.display?.props?.args ? <Purchase
+                          // @ts-ignore
+                          props={message.display?.props?.args}
+                        /> : <div>Something went wrong. Please try again later</div>
+                      }
+                    </BotCard>
+                  ) : (
+                    <BotMessage content={message.content} />
+                  )
         ) : message.role === 'user' ? (
           // @ts-ignore
           <UserMessage showAvatar>{message.content}</UserMessage>

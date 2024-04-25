@@ -5,6 +5,7 @@ import 'server-only'
 import { firestoreAutoId } from '../utils';
 import { use } from 'react';
 import { tr } from 'date-fns/locale';
+import getTrendingStocksServerSide from '../helper-actions/get-trending-stocks';
 
 
 
@@ -96,11 +97,6 @@ function flattenAnnualFinancialData(data: any) {
 export async function requestTrendingStock({ window }: { window: string }) {
     try {
 
-
-        const res = await fetch(`${apiBaseURL}/api/stock/trending`, {
-            method: 'GET',
-        })
-
         // placeholder in case of error
 
 
@@ -115,16 +111,12 @@ export async function requestTrendingStock({ window }: { window: string }) {
             }
         ]
 
-        if (res.status === 200) {
-            const { data } = await res.json()
+        // request for trending stocks on serverside
+        const data = await getTrendingStocksServerSide()
 
-            if (data !== undefined) {
-
-                trendingTickers = data
-            }
+        if (data) {
+            trendingTickers = data
         }
-
-
 
 
         const promiseTask: Promise<IStockData | undefined>[] = []

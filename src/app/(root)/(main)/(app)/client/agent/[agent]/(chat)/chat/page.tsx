@@ -1,7 +1,7 @@
 import { firestoreAutoId, isAgentChatTypeValid, nanoid } from '@/lib/utils'
 
 import { StockAgentAI } from '@/lib/chat/stock-agent-ai-actions'
-import { redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { Agent } from 'http'
 import { AgentChatTypeEnum, stockAgentSuggestionMessages } from '@/constant/enum'
 import { getAuthByCookie } from '@/lib/auth/action'
@@ -51,16 +51,9 @@ export default async function IndexPage({ params }: {
             />
         </StockAgentAI>
 
+    } else {
+        notFound()
     }
 
-    return <StockAgentAI initialAIState={{
-        chatId: id, interactions: [], messages: [],
-        agentChatType: params.agent as AgentChatTypeEnum
-    }}>
-        <Chat id={id}
-            chatAgent={params.agent as AgentChatTypeEnum}
-            uiStateType={typeof StockAgentAI}
-            suggestionMessages={stockAgentSuggestionMessages}
-        />
-    </StockAgentAI>
+
 }

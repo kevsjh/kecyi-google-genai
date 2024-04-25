@@ -61,26 +61,9 @@ export default async function IndexPage({ params }: {
 
             />
         </StockAgentAI>
+    } else {
+        notFound()
     }
 
 
-    return (
-        <StockAgentAI
-            initialAIState={{
-                chatId: chat.id,
-                messages: chat.messages,
-                interactions: [],
-                agentChatType: chat.agentChatType
-            }}
-        >
-            <Chat
-                id={chat.id}
-                initialMessages={chat.messages}
-                chatAgent={params.agent as AgentChatTypeEnum}
-                uiStateType={typeof StockAgentAI}
-                emptyScreen={<StockAgentEmptyScreen />}
-
-            />
-        </StockAgentAI>
-    )
 }
