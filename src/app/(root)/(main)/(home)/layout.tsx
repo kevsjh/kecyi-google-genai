@@ -2,7 +2,8 @@
 
 export const maxDuration = 180;
 
-import { Header } from "@/components/nav/header";
+
+import { AppHeader } from "@/components/nav/app-header";
 import RootProviders from "@/providers/root-providers";
 export default function Layout({
     children,
@@ -11,7 +12,7 @@ export default function Layout({
 }) {
     return (
         <div className="flex flex-col ">
-            <Header />
+            <AppHeader />
             {children}
         </div>
     );

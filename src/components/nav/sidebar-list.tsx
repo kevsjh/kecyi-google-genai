@@ -1,8 +1,6 @@
 
-
 import { SidebarItems } from './sidebar-items'
 
-import { cache } from 'react'
 import { ThemeToggle } from '../theme-toggle'
 import { ClearHistory } from './clear-history'
 import { AgentChatTypeEnum } from '@/constant/enum'
@@ -14,19 +12,15 @@ interface SidebarListProps {
     agentChatType: AgentChatTypeEnum
 }
 
-const loadChats = cache(async (userId: string, agentChatType: AgentChatTypeEnum) => {
-    if (userId === undefined || userId?.length === 0) {
-        return []
-    }
 
-    return await getClientChatsByAgentChatType({
-        agentChatType: agentChatType,
-        uid: userId
-    })
-})
 
 export async function SidebarList({ userId, agentChatType }: SidebarListProps) {
-    const chats = userId ? await loadChats(userId, agentChatType) : []
+
+    const chats = await getClientChatsByAgentChatType({
+        agentChatType: agentChatType,
+        uid: userId ?? ''
+    })
+
 
     return (
         <div className="flex flex-1 flex-col overflow-hidden">

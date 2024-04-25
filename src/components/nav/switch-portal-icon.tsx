@@ -5,8 +5,10 @@ import { useEffect, useState } from "react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import Link from "next/link"
 import { Briefcase, Person } from "@phosphor-icons/react"
+import { useMediaQuery } from "@/hooks/use-media-query"
 
 export default function SwitchPortalIcon() {
+    const isDesktop = useMediaQuery('(min-width: 768px)')
     const pathname = usePathname()
 
     const [isClient, setIsClient] = useState(false)
@@ -17,6 +19,20 @@ export default function SwitchPortalIcon() {
     }, [pathname])
 
 
+
+
+    if (!isDesktop) {
+        return <Link
+            href={isClient ? '/admin' : '/client'}
+            className="flex items-center text-sm gap-1"
+        >
+            {!isClient ? <Person size={20} /> : <Briefcase size={20} />}
+            <p className="">{
+                isClient ? 'Admin Portal' : 'Client Portal'
+
+            }</p>
+        </Link>
+    }
 
 
     return <Tooltip>

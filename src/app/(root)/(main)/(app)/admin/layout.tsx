@@ -1,5 +1,5 @@
 import ClientSideNav from "@/components/nav/portal-side-nav";
-import { Header } from "@/components/nav/header";
+import { AppHeader } from "@/components/nav/app-header";
 import PortalSideNav from "@/components/nav/portal-side-nav";
 import { adminSideNavItems, clientSideNavItems } from "@/config/portal-side-nav-config";
 import { getAuthByCookie } from "@/lib/auth/action";
@@ -21,7 +21,7 @@ export default async function ClientRootLayout({
         <div className="flex min-h-screen w-full flex-col ">
             <PortalSideNav items={adminSideNavItems} />
             <div className="flex flex-col   h-dvh sm:pl-14">
-                <Header />
+                <AppHeader items={adminSideNavItems} />
                 {children}
             </div>
         </div>

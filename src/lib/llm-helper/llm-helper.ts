@@ -122,19 +122,62 @@ export default async function LLMEntryHelper({ query, chatHistory, uid, rephrase
     }
 }
 
+export async function llmSummarizeChatHistory({ chatHistory }: { chatHistory: string }) {
 
 
-export async function llmStreamEntryHelper({ messageStreamCallbackFn, assistantChatId, aiState, query, uid, rephraseQuestion, accessToken, summarizeContext = true, minScore, history, messageStream }:
+    try {
+        const accessToken = await getGoogleAccessToken()
+        if (!accessToken) {
+            throw new Error('Failed to get access token')
+        }
+
+        const googleVertexAI = createGoogleGenerativeAI({
+            baseURL: process.env.GOOGLE_CLOUD_GEMINI_BASE_URL,
+            apiKey: '',
+            headers: ({
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${accessToken}`,
+            })
+        })
+
+        const { text, usage, finishReason } = await experimental_generateText({
+            model: googleVertexAI.chat('models/gemini-1.0-pro'),
+            prompt: `Summarize the following conversation between an AI customer service assistant and a customer for the live-agent to pick up on. 
+            The summary should be detailed, clear and concise.
+            Use only the information from the conversation and do not make up information. Consider the conversation and check if there's any pending actions needed by the live agent.
+            Keep the response professional, detailed and clear.
+            -----------------
+            ${chatHistory}
+            `,
+        });
+
+        return text
+
+
+
+    } catch (err) {
+        console.error('Error in llmSummarizeChatHistory', err)
+        return ''
+
+    }
+
+
+
+
+
+
+}
+
+
+/**
+ * Used by customer service as a tool for retrieveContext (LLM) to help with the conversation + vector search
+ * improves the question to a standalone question and sumarize the retrieve context for better contextual understanding
+ */
+export async function llmStreamEntryHelper({ messageStreamCallbackFn, assistantChatId, aiState, query, uid, rephraseQuestion, accessToken, summarizeContext = true, minScore, history, }:
     {
         uid: string, query: string, rephraseQuestion?: boolean, summarizeContext?: boolean,
         minScore?: number, history: any[], accessToken: string,
-        messageStream: {
-            value: JSX.Element;
-            update(value: ReactNode): void;
-            append(value: ReactNode): void;
-            error(error: any): void;
-            done(...args: [] | [ReactNode]): void;
-        }, assistantChatId: string
+        assistantChatId: string
         aiState: any,
         messageStreamCallbackFn: (content: string) => void
     }) {
@@ -160,7 +203,7 @@ export async function llmStreamEntryHelper({ messageStreamCallbackFn, assistantC
     try {
 
         const result = await experimental_streamText({
-            model: googleVertexAI.chat('models/gemini-1.0-pro'),
+            model: googleVertexAI.chat('models/gemini-1.5-pro-preview-0409'),
             temperature: 0.2,
             system: ` You are a customer service agent for the company KECYI bank and financial service. Your role is to provide support and information with support from the company retrieve context and data from the user.
             ----------------

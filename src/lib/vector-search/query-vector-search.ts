@@ -161,10 +161,6 @@ export default async function queryVectorSearch({ query, uid, allowDefaultQuery 
             finalResult = result
         }
 
-
-
-        console.log('resuklt', finalResult)
-
         // get datapointIdList
         const datapointIdList = finalResult.map((res) => res.datapointId)
 

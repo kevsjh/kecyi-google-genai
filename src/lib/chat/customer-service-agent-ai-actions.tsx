@@ -183,7 +183,6 @@ async function submitUserMessage(content: string) {
                   minScore: 0.6,
                   history: history,
                   accessToken,
-                  messageStream,
                   assistantChatId,
                   aiState,
                   messageStreamCallbackFn: (content: string) => {

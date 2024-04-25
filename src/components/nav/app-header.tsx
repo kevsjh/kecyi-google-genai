@@ -15,15 +15,11 @@ import {
 } from "@/components/ui/breadcrumb"
 
 import { SidebarToggle } from './sidebar-toggle'
-import { ChatHistory } from './chat-history'
-import { useAuthContext } from '@/context/auth-context'
-import { UserMenu } from './user-menu'
-import { SidebarMobile } from './sidebar-mobile'
-import { IconSeparator } from '../icon'
-import { GithubLogo, Smiley } from '@phosphor-icons/react'
 import UserProfile from '../user-profile'
 import { usePathname } from 'next/navigation'
-import { AgentChatTypeEnum } from '@/constant/enum'
+
+import { ChatSidebarMobile } from './chat-sidebar-mobile'
+import { PortalMobileNav } from './portal-mobile-nav'
 
 
 
@@ -112,17 +108,21 @@ function BreadcrumbMenu() {
 //   )
 // }
 
-export function Header() {
+export function AppHeader({ items }: {
+  items?: {
+    title: string;
+    path: string;
+    icon: JSX.Element;
+  }[]
+}) {
   return (
     <header className="sticky border-b top-0 z-50 flex items-center justify-between w-full h-12 px-4 shrink-0 bg-gradient-to-b from-background/10 via-background/50 to-background/80 backdrop-blur-xl">
       <div className="flex items-center">
         <React.Suspense fallback={<div className="flex-1 overflow-auto" />}>
           <div className='flex gap-2 items-center '>
+            <PortalMobileNav items={items} />
             <SidebarToggle />
-            <SidebarMobile>
-              <ChatHistory userId={''} agentChatType={AgentChatTypeEnum.STOCKAGENT}
-              />
-            </SidebarMobile>
+            {/* <ChatSidebarMobile /> */}
             <BreadcrumbMenu />
           </div>
 

@@ -66,7 +66,13 @@ export interface ClientChatSnippet {
 
 }
 
-
+export interface ILiveAgentDoc {
+    createdAt: Date,
+    id: string,
+    status: 'pending' | 'closed' | 'active',
+    summarizeChat: string,
+    uid: string
+}
 
 
 export interface StockGraphData {

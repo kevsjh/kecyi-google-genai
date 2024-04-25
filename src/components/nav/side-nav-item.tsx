@@ -30,7 +30,13 @@ export default function SideNavItem({ title, path, icon }: {
                 setIsActive(true)
                 return
             }
-        } else {
+        } else if (path === '/admin') {
+            if (path === pathname) {
+                setIsActive(true)
+                return
+            }
+        }
+        else {
             if (pathname.includes(path)) {
 
                 setIsActive(true)
