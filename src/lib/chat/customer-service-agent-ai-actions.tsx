@@ -47,7 +47,7 @@ import { ListStockPortfolio } from '@/components/stocks/list-stock-portfolio'
 import { SellStock } from '@/components/stocks/sell-stock'
 import { createGoogleGenerativeAI } from '@/packages/google/google-provider'
 import RouteAgentUI from '@/components/route-agent/route-agent-ui'
-import LLMEntryHelper from '../llm-helper/llm-helper'
+import LLMEntryHelper, { llmStreamEntryHelper } from '../llm-helper/llm-helper'
 
 
 async function confirmPurchase(symbol: string, price: number, amount: number, numberOfShares: number) {
@@ -465,42 +465,42 @@ async function submitUserMessage(content: string) {
         }
 
 
-        const currentMessages: { role: string, content: string }[] = aiState.get().messages.map((message: { role: any; content: any }) => ({
-          role: message.role,
-          content: message.content
-        }))
+        // const currentMessages: { role: string, content: string }[] = aiState.get().messages.map((message: { role: any; content: any }) => ({
+        //   role: message.role,
+        //   content: message.content
+        // }))
 
-        // get last message from user
-        const lastUserMessage = currentMessages[currentMessages.length - 1]
-
-
-        // map chat history  without current message to string with \n delimiter
-        const chatHistoryString = currentMessages.slice(0, -1).map((message) => {
-          return `${message.role}: ${message.content}`
-        }).join('\n')
-        const {
-          revisedQuestion,
-          revisedContext }
-
-          = await LLMEntryHelper({
-            query: lastUserMessage.content,
-            chatHistory: chatHistoryString,
-            uid: session.user.id,
-            rephraseQuestion: currentMessages.length > 1,
-            minScore: 0.6
-          })
+        // // get last message from user
+        // const lastUserMessage = currentMessages[currentMessages.length - 1]
 
 
-        // remove last message in currentMessages and replace it with the revised question
-        const revisedMessages: any[] = [
-          ...currentMessages.slice(0, -1),
-          {
-            role: 'user',
-            content: revisedQuestion
-          }
-        ]
+        // // map chat history  without current message to string with \n delimiter
+        // const chatHistoryString = currentMessages.slice(0, -1).map((message) => {
+        //   return `${message.role}: ${message.content}`
+        // }).join('\n')
+        // const {
+        //   revisedQuestion,
+        //   revisedContext }
+
+        //   = await LLMEntryHelper({
+        //     query: lastUserMessage.content,
+        //     chatHistory: chatHistoryString,
+        //     uid: session.user.id,
+        //     rephraseQuestion: currentMessages.length > 1,
+        //     minScore: 0.6
+        //   })
 
 
+        // // remove last message in currentMessages and replace it with the revised question
+        // const revisedMessages: any[] = [
+        //   ...currentMessages.slice(0, -1),
+        //   {
+        //     role: 'user',
+        //     content: revisedQuestion
+        //   }
+        // ]
+
+        const assistantChatId = nanoid()
 
         const googleVertexAI = createGoogleGenerativeAI({
           baseURL: process.env.GOOGLE_CLOUD_GEMINI_BASE_URL,
@@ -537,34 +537,61 @@ async function submitUserMessage(content: string) {
 
               }),
             },
+            retrieveContext: {
+              description: 'Tool to retrieve context from knowledge base',
+              parameters: z.object({
+                query: z
+                  .string()
+                  .describe(
+                    'The query to retrieve context from the knowledge base'
+                  ),
 
 
+
+              }),
+              execute: async ({ query }) => {
+                return await llmStreamEntryHelper({
+                  query,
+                  uid: session.user.id,
+                  rephraseQuestion: false,
+                  summarizeContext: true,
+                  minScore: 0.6,
+                  history: history,
+                  accessToken,
+                  messageStream,
+                  assistantChatId,
+                  aiState,
+                  messageStreamCallbackFn: (content: string) => {
+                    messageStream.update(<BotMessage content={content} />)
+                  }
+                })
+              }
+            },
 
           },
           system: `\
           You are a customer service agent for the company KECYI bank and financial service. Your role is to provide support and information with support from the company retrieve context and data from the user.
-          You should also attempt to answer questions with the support from the following pieces of retrieved context and available function tools.
          
-          If the user requests, query or tasks needs to be routed to a different agent, you should
-            1. If user ask about trending stocks, current stock portfolio, purchase or sell stocks, call the \`routeAgent\` function to route with the path '/client/agent/stockagent/chat' and name 'Stock Agent'.
-            2. If user needs to view, manage their bank account transaction, report fraud transaction and any related transactions, call the \`routeAgent\` function to route with the path '/client/transactions' and name 'Transactions'.
+          If the user query or request for certain tasks that needs to be routed to a different agent, you should
+            1. Check if user ask about trending stocks, current stock portfolio, purchase or sell stocks, call the \`routeAgent\` function to route with the path '/client/agent/stockagent/chat' and name 'Stock Agent'.
+            2. Check if user needs to view, manage their bank account transaction, report fraud transaction and any related transactions, call the \`routeAgent\` function to route with the path '/client/transactions' and name 'Transactions'.
+            3. Do not make up any agent, path or name, beyond the provided exact path and name.
 
-          ----------------
-          RETRIEVED CONTEXT: ${revisedContext}
-          ----------------
+          If you do not have sufficient data, context or information to respond to the user question, call the \`retrieveContext\` function to retrieve context from the knowledge base. Rephrase the question to a standalone query so that the context can be retrieved from the knowledge base.
           
-          Think step by step and respond with a professional answer. If a response to the question cannot be determined from the context, history or the tools available, respond that you do not have enough information to respond to the question.
+          Think step by step, do not make up any information and assumptions. Respond with a professional answer. If a response to the question cannot be determined from the context, history or the tools available, respond that you do not have enough information to respond to the question.
           If the user wants to complete an impossible task, respond that you are a demo and cannot do that.
           `,
-          messages: [...revisedMessages]
+          messages: [...history]
         })
 
         let textContent = ''
         spinnerStream.done(null)
 
+
         // streaming chat response from llm should match the same chatId
         // this allow upserts with same messageId
-        const assistantChatId = nanoid()
+
 
         let llmToolInvoked = false
 
@@ -573,11 +600,18 @@ async function submitUserMessage(content: string) {
           // check if tool-call is invoked
           const { type } = delta
 
+          console.log('detla', delta)
+
           // mark the tool as invoked
           if (type === 'tool-call') {
             llmToolInvoked = true
+
+
           }
           if (type === 'text-delta') {
+
+
+
             const { textDelta } = delta
 
 
@@ -602,6 +636,7 @@ async function submitUserMessage(content: string) {
             const { toolName, args } = delta
 
             if (toolName === 'routeAgent') {
+
               uiStream.update(
                 <BotCard>
 
@@ -639,8 +674,27 @@ async function submitUserMessage(content: string) {
                   }
                 ]
               })
+            } else if (toolName === 'retrieveContext') {
+
+              messageStream.update(<BotMessage content={'Give me a second, searching for additional information from knowledge hub...'} />)
+
             }
           }
+          else if (type === 'tool-result') {
+            const { toolName, args, result } = delta
+
+            if (toolName === 'retrieveContext') {
+
+              console.log('tool result invoke retrieve context',)
+
+            }
+          }
+
+
+          //   let retrievalResultTextContent = ''
+
+
+          // }
         }
 
 
@@ -682,6 +736,8 @@ async function submitUserMessage(content: string) {
             await saveChat(chat)
           }
         }
+
+        console.log('final gaodim')
 
         uiStream.done()
         textStream.done()
@@ -768,7 +824,7 @@ export const getUIStateFromAIState = (aiState: Chat) => {
   // print last aiState messages
   // @ts-ignore
 
-  return aiState.messages
+  return aiState?.messages
     .filter(message => message.role !== 'system')
     .map((message, index) => ({
       id: `${aiState.chatId}-${index}`,

@@ -331,53 +331,7 @@ async function submitUserMessage(content: string) {
           // before tools invocation is completed (show skeleton etc...)
           else if (type === 'tool-call') {
             const { toolName, args } = delta
-            //  if (toolName === 'showPurchaseInsurance') {
 
-            //   uiStream.update(
-            //     <BotCard>
-
-            //       <InsurancePurchase
-            //         props={{
-            //           currentInsurance: args.currentInsurance,
-            //           // @ts-ignore
-            //           numberOfShares: args.numberOfShares,
-            //           // @ts-ignore
-            //           price: args.price,
-            //           // @ts-ignore
-            //           symbol: args.symbol,
-            //           status: 'requires_action'
-            //         }}
-
-            //       />
-            //     </BotCard>
-            //   )
-            //   aiState.done({
-            //     ...aiState.get(),
-            //     messages: [
-            //       ...aiState.get().messages,
-            //       {
-            //         id: nanoid(),
-            //         role: 'assistant',
-            //         name: 'showStockPurchase',
-            //         content: JSON.stringify({
-            //           symbol: args.symbol,
-            //           price: args.price,
-            //           numberOfShares: args.numberOfShares,
-            //           status: 'requires_action'
-            //         }),
-            //         display: {
-            //           name: 'showStockPurchase',
-            //           props: {
-            //             args: {
-            //               ...args,
-            //               status: 'requires_action'
-            //             }
-            //           }
-            //         }
-            //       }
-            //     ]
-            //   })
-            // }
 
           }
           // tool invocation is completed

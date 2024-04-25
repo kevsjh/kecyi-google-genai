@@ -2,8 +2,12 @@
 
 import { createGoogleGenerativeAI } from "@/packages/google/google-provider"
 import { getGoogleAccessToken } from "../auth/access-token"
-import { experimental_generateText } from "ai"
+import { experimental_generateText, experimental_streamText, streamToResponse } from "ai"
 import queryVectorSearch from "../vector-search/query-vector-search"
+import { getMutableAIState } from "ai/rsc"
+import { BotCard, BotMessage, spinner } from '@/components/stocks'
+import { ReactNode } from "react"
+import { removeDuplicateMessages } from "../utils"
 
 
 export async function LLMVectorSearchHelper({ query, uid, summarizeContext = true, minScore }: { uid: string, query: string, summarizeContext?: boolean, minScore?: number }) {
@@ -54,8 +58,6 @@ export default async function LLMEntryHelper({ query, chatHistory, uid, rephrase
     {
         uid: string, query: string, chatHistory: string, rephraseQuestion: boolean, summarizeContext?: boolean,
         minScore?: number
-
-
     }) {
     try {
 
@@ -118,4 +120,105 @@ export default async function LLMEntryHelper({ query, chatHistory, uid, rephrase
             revisedContext: ''
         }
     }
+}
+
+
+
+export async function llmStreamEntryHelper({ messageStreamCallbackFn, assistantChatId, aiState, query, uid, rephraseQuestion, accessToken, summarizeContext = true, minScore, history, messageStream }:
+    {
+        uid: string, query: string, rephraseQuestion?: boolean, summarizeContext?: boolean,
+        minScore?: number, history: any[], accessToken: string,
+        messageStream: {
+            value: JSX.Element;
+            update(value: ReactNode): void;
+            append(value: ReactNode): void;
+            error(error: any): void;
+            done(...args: [] | [ReactNode]): void;
+        }, assistantChatId: string
+        aiState: any,
+        messageStreamCallbackFn: (content: string) => void
+    }) {
+
+    'use server'
+
+
+
+
+    console.log('llm stream query', query)
+
+
+    const retrievedContext = await LLMVectorSearchHelper({
+        query: query,
+        uid: uid,
+        summarizeContext,
+        minScore
+
+    })
+
+    const googleVertexAI = createGoogleGenerativeAI({
+        baseURL: process.env.GOOGLE_CLOUD_GEMINI_BASE_URL,
+        apiKey: '',
+        headers: ({
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+        })
+    })
+    try {
+
+        const result = await experimental_streamText({
+            model: googleVertexAI.chat('models/gemini-1.0-pro'),
+            temperature: 0.2,
+            system: ` You are a customer service agent for the company KECYI bank and financial service. Your role is to provide support and information with support from the company retrieve context and data from the user.
+            ----------------
+            RETRIEVED CONTEXT: ${retrievedContext}
+            ----------------
+            Think step by step, do not make up any information and assumptions. Respond with a professional answer. If a response to the question cannot be determined from the context, history or the tools available, respond that you do not have enough information to respond to the question.
+        `,
+            messages: [...history]
+        });
+
+        let textContent = ''
+
+        for await (const delta of result.fullStream) {
+            console.log('nested edlta', delta)
+            const { type } = delta
+
+            if (type === 'text-delta') {
+                const { textDelta } = delta
+
+                textContent += textDelta
+                // @ts-nocheck
+                messageStreamCallbackFn(textContent)
+                // messageStream.update(<BotMessage content={ textContent } />)
+
+                aiState.update({
+                    ...aiState.get(),
+                    final: false,
+                    messages: [
+                        ...aiState.get().messages,
+                        {
+                            id: assistantChatId,
+                            role: 'assistant',
+                            content: textContent
+                        }
+                    ]
+                })
+            }
+
+        }
+        const { chatId, messages, interactions, agentChatType } = aiState.get()
+        const uniqueMessages = removeDuplicateMessages(messages)
+        console.log('unique message', uniqueMessages)
+        aiState.done({
+            ...aiState.get(),
+            interactions: [],
+
+            messages: uniqueMessages
+        })
+        console.log('completed delta')
+
+    } catch (err) {
+
+    }
+
 }
