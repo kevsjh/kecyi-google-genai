@@ -193,7 +193,10 @@ export function AddContentDialog() {
                 objectFullPath,
                 objectURL } = await uploadPDFObject({
                     selectedFile,
+                    // TODO change this to auth.currentUser.
+                    // uid: "all"
                     uid: auth.currentUser.uid
+
                 })
 
             if (objectFullPath === undefined || objectURL === undefined) {
@@ -205,6 +208,8 @@ export function AddContentDialog() {
             const { status, error } = await loadPDFAction({
                 objectFullPath,
                 objectURL,
+                // TODO change this to auth.currentUser.
+                // uid: "all"
                 uid: auth.currentUser.uid,
             })
 

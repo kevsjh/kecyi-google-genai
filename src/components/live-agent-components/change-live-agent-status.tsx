@@ -34,7 +34,9 @@ export default function ChangeLiveAgentStatusButton({ id, currentStatus }: { id:
 
 
         router.push(`/admin/inbox/${id}`)
+        router.refresh()
         toast.success('Updated live agent request')
+
 
         setLoading(false)
 

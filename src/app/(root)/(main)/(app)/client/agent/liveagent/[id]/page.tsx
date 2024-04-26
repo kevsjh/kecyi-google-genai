@@ -2,6 +2,7 @@ import AdminActiveLiveChat from "@/components/live-agent-components/active-live-
 import AdminPendingLiveChat from "@/components/live-agent-components/pending-live-chat"
 import { getLiveAgentChatsById } from "@/lib/live-agent-actions/live-agent-actions"
 import { notFound } from "next/navigation"
+import ClientListenLiveAgentState from "./components/client-listen-live-agent-state"
 
 export default async function IndexPage({ params }: {
     params: {
@@ -19,7 +20,10 @@ export default async function IndexPage({ params }: {
     }
 
     if (liveAgentDoc.status === 'pending') {
-        return <AdminPendingLiveChat liveAgentDoc={liveAgentDoc} />
+        return <>
+            <ClientListenLiveAgentState id={liveAgentDoc.id} />
+            <AdminPendingLiveChat liveAgentDoc={liveAgentDoc} />
+        </>
     }
     if (liveAgentDoc.status === 'active') {
         return <AdminActiveLiveChat

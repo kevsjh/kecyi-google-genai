@@ -129,8 +129,11 @@ async function submitUserMessage(content: string) {
                   accessToken,
                   assistantChatId,
                   aiState,
-                  messageStreamCallbackFn: (content: string) => {
-                    messageStream.update(<BotMessage content={content} />)
+                  messageStreamCallbackFn: (content: string, referenceDocMetadata: {
+                    contentDocId: string;
+                    filename: string;
+                  }[]) => {
+                    messageStream.update(<BotMessage content={content} referenceDocMetadata={referenceDocMetadata} />)
                   }
                 })
               }
@@ -138,17 +141,12 @@ async function submitUserMessage(content: string) {
 
           },
           system: `\
-          You are a customer service agent for the company KECYI bank and financial service.Your role is to provide support and information with support from the company retrieve context and data from the user.
+          You are a copilot to a customer service live agent to assists them to better answer their customer questions and queries. Your role is to provide answer to the live agent with support from the company knowledge hub.
          
-          If the user query or request for certain tasks that needs to be routed to a different agent, you should
-                1. Check if user ask about trending stocks, current stock portfolio, purchase or sell stocks, call the \`routeAgent\` function to route with the path '/client/agent/stockagent/chat' and name 'Stock Agent'.
-            2. Check if user needs to view, manage their bank account transaction, report fraud transaction and any related transactions, call the \`routeAgent\` function to route with the path '/client/transactions' and name 'Transactions'.
-            3. Do not make up any agent, path or name, beyond the provided exact path and name.
-
           If you do not have sufficient data, context or information to respond to the user question, call the \`retrieveContext\` function to retrieve context from the knowledge base. Rephrase the question to a standalone query so that the context can be retrieved from the knowledge base.
           
           Think step by step, do not make up any information and assumptions. Respond with a professional answer. If a response to the question cannot be determined from the context, history or the tools available, respond that you do not have enough information to respond to the question.
-          If the user wants to complete an impossible task, respond that you are a demo and cannot do that.
+          If the customer service live agent wants to complete an impossible task, respond that you are a demo and cannot do that.
           `,
           messages: [...history]
         })
@@ -156,33 +154,20 @@ async function submitUserMessage(content: string) {
         let textContent = ''
         spinnerStream.done(null)
 
-
         // streaming chat response from llm should match the same chatId
         // this allow upserts with same messageId
-
-
         let llmToolInvoked = false
 
         for await (const delta of result.fullStream) {
 
           // check if tool-call is invoked
           const { type } = delta
-
-
-
           // mark the tool as invoked
           if (type === 'tool-call') {
             llmToolInvoked = true
-
-
           }
           if (type === 'text-delta') {
-
-
-
             const { textDelta } = delta
-
-
             textContent += textDelta
             messageStream.update(<BotMessage content={textContent} />)
 
@@ -202,17 +187,16 @@ async function submitUserMessage(content: string) {
           // before tools invocation is completed (show skeleton etc...)
           else if (type === 'tool-call') {
             const { toolName, args } = delta
+            if (toolName === 'retrieveContext') {
+              messageStream.update(<BotMessage content={'I am currently searching for additional information from the knowledge hub. Hang tight . . .'} />)
+            }
 
           } else if (type === 'tool-result') {
             const { toolName, args, result } = delta
           }
-
         }
-
-
         const { chatId, messages, interactions, agentChatType } = aiState.get()
         const uniqueMessages = removeDuplicateMessages(messages)
-
         // mark ai state as done for normal text streaming response
         // only if llm tool is not invoked
         if (!llmToolInvoked) {
@@ -224,30 +208,32 @@ async function submitUserMessage(content: string) {
           })
         }
 
-        if (session && session.user) {
-          const createdAt = new Date()
-          const userId = session.user.id as string
-          const path = `chat/${chatId}`
-          const title = messages[0].content.substring(0, 100)
+        // no chat save for copilot actions
 
-          const chat: Chat = {
-            id: chatId,
-            title,
-            userId,
-            createdAt,
-            messages: uniqueMessages,
-            path,
-            agentChatType
-          }
+        // if (session && session.user) {
+        //   const createdAt = new Date()
+        //   const userId = session.user.id as string
+        //   const path = `chat/${chatId}`
+        //   const title = messages[0].content.substring(0, 100)
+
+        //   const chat: Chat = {
+        //     id: chatId,
+        //     title,
+        //     userId,
+        //     createdAt,
+        //     messages: uniqueMessages,
+        //     path,
+        //     agentChatType
+        //   }
 
 
-          //  get the last message from unique message
-          const lastMessage = uniqueMessages[uniqueMessages.length - 1]
-          // we exepect it should not be user message, if it is we do not save
-          if (lastMessage.role !== 'user') {
-            // await saveChat(chat)
-          }
-        }
+        //   //  get the last message from unique message
+        //   const lastMessage = uniqueMessages[uniqueMessages.length - 1]
+        //   // we exepect it should not be user message, if it is we do not save
+        //   if (lastMessage.role !== 'user') {
+        //     // await saveChat(chat)
+        //   }
+        // }
 
         uiStream.done()
         textStream.done()
@@ -338,11 +324,17 @@ export const getUIStateFromAIState = (aiState: Chat) => {
           (
             <BotMessage content={message.content} />
           )
-        ) : message.role === 'user' ? (
+        ) :
           // @ts-ignore
-          <UserMessage showAvatar>{message.content}</UserMessage>
-        ) : (
-          <BotMessage content={message.content} />
-        )
+          message.display?.name === 'retrieveContext' ? (
+            // @ts-ignore
+            <BotMessage content={message.content} referenceDocMetadata={message.display?.props?.result?.referenceDocMetadata} />
+            // @ts-ignore
+          ) : message.role === 'user' ? (
+            // @ts-ignore
+            <UserMessage showAvatar>{message.content}</UserMessage>
+          ) : (
+            <BotMessage content={message.content} />
+          )
     }))
 }

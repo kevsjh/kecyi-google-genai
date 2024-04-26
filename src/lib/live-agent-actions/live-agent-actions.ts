@@ -157,7 +157,7 @@ export async function getLiveAgentChats() {
 
         const liveAgentRef = firebaseAdminFirestore.collection('liveagent')
 
-        const qRef = liveAgentRef.where('uid', '==', uid).orderBy('createdAt')
+        const qRef = liveAgentRef.where('uid', '==', uid).orderBy('createdAt', 'desc')
 
         const qRes = await qRef.get()
 

@@ -29,6 +29,9 @@ async function retrieveDocStore({ datapointIdList }: { datapointIdList: string[]
 
         const parentDocIdList: string[] = []
 
+        const referenceDocMetadata: { contentDocId: string, filename: string }[] = []
+
+
         retrieveDocs.forEach((doc) => {
             // check if the doc has parentDocId
             if (doc?.metadata?.parentDocId?.length > 0) {
@@ -39,6 +42,16 @@ async function retrieveDocStore({ datapointIdList }: { datapointIdList: string[]
                 }
             } else {
                 retrieveContents.push(doc.pageContent)
+                const childContentDocId = doc.metadata?.contentDocId
+                // find if childContentDocId exists in referenceDocMetadata
+                const found = referenceDocMetadata.find((ref) => ref.contentDocId === childContentDocId)
+                // if not exists, add it
+                if (!found) {
+                    referenceDocMetadata.push({
+                        contentDocId: doc.metadata?.contentDocId,
+                        filename: doc.metadata?.filename
+                    })
+                }
             }
         })
 
@@ -51,6 +64,28 @@ async function retrieveDocStore({ datapointIdList }: { datapointIdList: string[]
         })
         const retrieveParentDocs = await Promise.all(retrieveParentDocTask)
 
+
+        retrieveParentDocs.forEach((doc) => {
+            const contentDocId = doc.metadata?.contentDocId
+            const filename = doc.metadata?.filename
+            // push to referenceDocMetadata if contentDocId does not exist
+            const found = referenceDocMetadata.find((ref) => ref.contentDocId === contentDocId)
+            if (!found) {
+                referenceDocMetadata.push({
+                    contentDocId: contentDocId,
+                    filename: filename
+                })
+            }
+
+        })
+
+        // remove any duplicate referenceDocMetadata where contentDocId is the same
+        const uniqueReferenceDocMetadata = referenceDocMetadata.filter((ref, index, self) =>
+            index === self.findIndex((t) => (
+                t.contentDocId === ref.contentDocId
+            ))
+        )
+
         // push the content of parentDoc to retrieveContents
         retrieveParentDocs.forEach((doc) => {
             retrieveContents.push(doc.pageContent)
@@ -58,10 +93,16 @@ async function retrieveDocStore({ datapointIdList }: { datapointIdList: string[]
 
         // convert retrieveContents to string with \n delimiter
         const context = retrieveContents.join('\n')
-        return context
+        return {
+            context,
+            referenceDocMetadata: uniqueReferenceDocMetadata
+        }
     } catch (err) {
         console.error('Error in retrieveDocStore', err)
-        return ''
+        return {
+            context: '',
+            referenceDocMetadata: []
+        }
     }
 }
 
@@ -74,6 +115,7 @@ export default async function queryVectorSearch({ query, uid, allowDefaultQuery 
             status: false,
             error: 'Something went wrong. Please try again later.',
             retrievedContext: '',
+            referenceDocMetadata: []
         }
     }
 
@@ -132,6 +174,7 @@ export default async function queryVectorSearch({ query, uid, allowDefaultQuery 
                 status: false,
                 error: 'Something went wrong. Please try again later.',
                 retrievedContext: '',
+                referenceDocMetadata: []
             }
         }
         const { nearestNeighbors } = await response.json()
@@ -140,6 +183,10 @@ export default async function queryVectorSearch({ query, uid, allowDefaultQuery 
             return {
                 status: false,
                 retrievedContext: '',
+                referenceDocMetadata: [] as {
+                    contentDocId: string;
+                    filename: string;
+                }[]
             }
         }
 
@@ -153,6 +200,8 @@ export default async function queryVectorSearch({ query, uid, allowDefaultQuery 
                 distance: neighbor?.distance
             }
         })
+
+
 
         if (minScore !== undefined) {
             // filter out datapoint with distance less than minScore
@@ -168,14 +217,15 @@ export default async function queryVectorSearch({ query, uid, allowDefaultQuery 
 
         // retrieve text content with retrieved datapointIdList
         // parent child retrieval is handled in retrieveDocStore
-        const context = await retrieveDocStore({
+        const { context, referenceDocMetadata } = await retrieveDocStore({
             datapointIdList
         })
 
         return {
             status: true,
             data: finalResult,
-            retrievedContext: context
+            retrievedContext: context,
+            referenceDocMetadata: referenceDocMetadata
         }
 
     } catch (err) {
@@ -184,6 +234,10 @@ export default async function queryVectorSearch({ query, uid, allowDefaultQuery 
             status: false,
             error: 'Something went wrong. Please try again later.',
             retrievedContext: '',
+            referenceDocMetadata: [] as {
+                contentDocId: string;
+                filename: string;
+            }[]
         }
     }
 

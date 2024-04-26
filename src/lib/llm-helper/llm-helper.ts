@@ -10,7 +10,7 @@ import { removeDuplicateMessages } from "../utils"
 
 export async function LLMVectorSearchHelper({ query, uid, summarizeContext = true, minScore }: { uid: string, query: string, summarizeContext?: boolean, minScore?: number }) {
 
-    const retrievedContext = await queryVectorSearch({
+    const { retrievedContext, referenceDocMetadata } = await queryVectorSearch({
         query: query,
         uid: uid,
         allowDefaultQuery: true,
@@ -30,12 +30,12 @@ export async function LLMVectorSearchHelper({ query, uid, summarizeContext = tru
                 Authorization: `Bearer ${accessToken}`,
             })
         })
-        let rephraseContext = retrievedContext.retrievedContext
+        let rephraseContext = retrievedContext
         if (summarizeContext) {
             const { text, usage, finishReason } = await experimental_generateText({
                 model: googleVertexAI.chat('models/gemini-1.0-pro'),
                 prompt: `Retrieved Contexts: 
-                "${retrievedContext.retrievedContext}"
+                "${retrievedContext}"
                 -----------------------------------------
                 Above is the retrieved context from a vector store. Please remove noise and filter out key content that could helps on the original question ${query}
                 The summary should be detailed, clear and concise. Do not make up any information and assumptions.
@@ -44,10 +44,17 @@ export async function LLMVectorSearchHelper({ query, uid, summarizeContext = tru
             });
             rephraseContext = text
         }
-        return rephraseContext
+
+        return {
+            retrievedContext: rephraseContext,
+            referenceDocMetadata,
+        }
     } catch (err) {
         console.error('Error in LLMVectorSearchHelper', err)
-        return retrievedContext.retrievedContext
+        return {
+            retrievedContext: retrievedContext,
+            referenceDocMetadata,
+        }
     }
 }
 
@@ -98,7 +105,7 @@ export default async function LLMEntryHelper({ query, chatHistory, uid, rephrase
             revisedQuestion = text
         }
 
-        const revisedContext = await LLMVectorSearchHelper({
+        const { retrievedContext, referenceDocMetadata } = await LLMVectorSearchHelper({
             query: revisedQuestion,
             uid: uid,
             summarizeContext,
@@ -107,7 +114,7 @@ export default async function LLMEntryHelper({ query, chatHistory, uid, rephrase
         })
         return {
             revisedQuestion,
-            revisedContext
+            retrievedContext
         }
 
 
@@ -177,12 +184,15 @@ export async function llmStreamEntryHelper({ messageStreamCallbackFn, assistantC
         minScore?: number, history: any[], accessToken: string,
         assistantChatId: string
         aiState: any,
-        messageStreamCallbackFn: (content: string) => void
+        messageStreamCallbackFn: (content: string, referenceDocMetadata: {
+            contentDocId: string;
+            filename: string;
+        }[]) => void
     }) {
 
     'use server'
 
-    const retrievedContext = await LLMVectorSearchHelper({
+    const { retrievedContext, referenceDocMetadata } = await LLMVectorSearchHelper({
         query: query,
         uid: uid,
         summarizeContext,
@@ -223,7 +233,7 @@ export async function llmStreamEntryHelper({ messageStreamCallbackFn, assistantC
 
                 textContent += textDelta
                 // @ts-nocheck
-                messageStreamCallbackFn(textContent)
+                messageStreamCallbackFn(textContent, referenceDocMetadata)
                 // messageStream.update(<BotMessage content={ textContent } />)
 
                 aiState.update({
@@ -240,7 +250,8 @@ export async function llmStreamEntryHelper({ messageStreamCallbackFn, assistantC
                                 props: {
                                     args: {
                                         content: textContent
-                                    }
+                                    },
+                                    result: { referenceDocMetadata }
                                 }
                             }
                         }

@@ -15,6 +15,7 @@ import { IconUser } from '../icon'
 import UserAvatar from '../user-avatar'
 import BotAvatar from '../bot-avatar'
 import { Skeleton } from '../ui/skeleton'
+import Link from 'next/link'
 
 
 // Different types of message bubbles.
@@ -36,11 +37,14 @@ export function UserMessage({ children }: { children: React.ReactNode }) {
 export function BotMessage({
   content,
   className,
-  attachments
+  referenceDocMetadata
 }: {
   content: string | StreamableValue<string>
   className?: string
-  attachments?: React.ReactNode
+  referenceDocMetadata?: {
+    contentDocId: string;
+    filename: string;
+  }[]
 }) {
   const text = useStreamableText(content)
 
@@ -49,51 +53,69 @@ export function BotMessage({
       <div className=" flex  shrink-0 select-none items-center justify-center ">
         <BotAvatar />
       </div>
-      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
-        <MemoizedReactMarkdown
-          className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0"
-          remarkPlugins={[remarkGfm, remarkMath]}
-          components={{
-            p({ children }) {
-              return <p className="mb-2 last:mb-0">{children}</p>
-            },
-            code({ node, inline, className, children, ...props }) {
-              if (children.length) {
-                if (children[0] == '▍') {
+      <div className='ml-4 flex-1 flex flex-col gap-2'>
+        <div className="  space-y-2 overflow-hidden px-1">
+          <MemoizedReactMarkdown
+            className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0"
+            remarkPlugins={[remarkGfm, remarkMath]}
+            components={{
+              p({ children }) {
+                return <p className="mb-2 last:mb-0">{children}</p>
+              },
+              code({ node, inline, className, children, ...props }) {
+                if (children.length) {
+                  if (children[0] == '▍') {
+                    return (
+                      <span className="mt-1 animate-pulse cursor-default">▍</span>
+                    )
+                  }
+
+                  children[0] = (children[0] as string).replace('`▍`', '▍')
+                }
+
+                const match = /language-(\w+)/.exec(className || '')
+
+                if (inline) {
                   return (
-                    <span className="mt-1 animate-pulse cursor-default">▍</span>
+                    <code className={className} {...props}>
+                      {children}
+                    </code>
                   )
                 }
 
-                children[0] = (children[0] as string).replace('`▍`', '▍')
-              }
-
-              const match = /language-(\w+)/.exec(className || '')
-
-              if (inline) {
                 return (
-                  <code className={className} {...props}>
-                    {children}
-                  </code>
+                  <CodeBlock
+                    key={Math.random()}
+                    language={(match && match[1]) || ''}
+                    value={String(children).replace(/\n$/, '')}
+                    {...props}
+                  />
                 )
               }
+            }}
+          >
+            {text}
+          </MemoizedReactMarkdown>
 
-              return (
-                <CodeBlock
-                  key={Math.random()}
-                  language={(match && match[1]) || ''}
-                  value={String(children).replace(/\n$/, '')}
-                  {...props}
-                />
-              )
+        </div>
+        {
+          (referenceDocMetadata) && <div className='flex gap-2 items-center flex-wrap'>
+            {
+              referenceDocMetadata?.map((doc, index) => {
+                return <Link key={index}
+                  className='border px-2 py-0.5 rounded-md shadow-md text-xs '
+                  target='_blank'
+                  href={`/admin/knowledge/${doc.contentDocId}`}
+                >{doc.filename}  </Link>
+              })
             }
-          }}
-        >
-          {text}
-        </MemoizedReactMarkdown>
 
+          </div>
+        }
       </div>
-      {attachments}
+
+
+
     </div>
   )
 }

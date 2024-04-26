@@ -185,8 +185,11 @@ async function submitUserMessage(content: string) {
                   accessToken,
                   assistantChatId,
                   aiState,
-                  messageStreamCallbackFn: (content: string) => {
-                    messageStream.update(<BotMessage content={content} />)
+                  messageStreamCallbackFn: (content: string, referenceDocMetadata: {
+                    contentDocId: string;
+                    filename: string;
+                  }[]) => {
+                    messageStream.update(<BotMessage content={content} referenceDocMetadata={referenceDocMetadata} />)
                   }
                 })
               }
@@ -502,10 +505,16 @@ export const getUIStateFromAIState = (aiState: Chat) => {
                 <TransferLiveAgentUI props={message.display?.props?.result} />
               </BotCard>
               // @ts-ignore
-            )
-              : (
-                <BotMessage content={message.content} />
+            ) :
+              // @ts-ignore
+              message.display?.name === 'retrieveContext' ? (
+                // @ts-ignore
+                <BotMessage content={message.content} referenceDocMetadata={message.display?.props?.result?.referenceDocMetadata} />
+                // @ts-ignore
               )
+                : (
+                  <BotMessage content={message.content} />
+                )
         ) : message.role === 'user' ? (
           // @ts-ignore
           <UserMessage showAvatar>{message.content}</UserMessage>

@@ -15,7 +15,7 @@ export default async function ClientRootLayout({
     children: React.ReactNode;
     searchParams: { [key: string]: string | string[] | undefined }
 }>) {
-    const showCopilot = (searchParams?.copilot as string)?.toLowerCase() === 'true'
+
     const liveAgentDocs = await getLiveAgentChats()
 
 

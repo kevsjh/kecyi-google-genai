@@ -26,16 +26,9 @@ import { number, symbol, z } from 'zod'
 
 import { CheckIcon, SpinnerIcon } from '@/components/icon'
 import { getGoogleAccessToken } from '../auth/access-token'
-import { IStockData, googleFinanceRequest, requestTrendingStock, yahooFinancialRequest } from '../helper-agents/stock-agent-helper-request'
-
 import { getAuthByCookie } from '../auth/action'
-import { saveChat } from '../helper-actions/action'
-import { StocksSkeleton } from '@/components/stocks/stocks-skeleton'
-import { IStock, Stocks } from '@/components/stocks/stocks'
+
 import { Stock } from '@/components/stocks/stock'
-import { AgentChatTypeEnum } from '@/constant/enum'
-import { StockSkeleton } from '@/components/stocks/stock-skeleton'
-import { Purchase } from '@/components/stocks/stock-purchase'
 import { getUserAccountTransactionData, getUserInsurance, markTransactionAsReported, purchaseInsurance } from '../helper-agents/transaction-copilot-request'
 import { InsurancePurchase } from '@/components/transactions/insurance-purchase'
 import Link from 'next/link'
@@ -324,8 +317,6 @@ async function submitUserMessage(content: string) {
 
           // check if tool-call is invoked
           const { type } = delta
-
-
           // mark the tool as invoked
           // if (type === 'tool-call' || type === 'tool-result') {
           //   llmToolInvoked = true
@@ -482,6 +473,8 @@ async function submitUserMessage(content: string) {
             messages: uniqueMessages
           })
         }
+
+        // no chat save for copilot ai
 
         // if (session && session.user) {
         //   const createdAt = new Date()
