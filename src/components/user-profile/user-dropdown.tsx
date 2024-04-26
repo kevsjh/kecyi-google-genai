@@ -34,9 +34,7 @@ export default function UserDropdown() {
             // await auth.signOut()
             // router.refresh()
             await invokeUserSignOut()
-            if (pathname.startsWith("/profile")) {
-                router.push('/')
-            }
+            router.push('/')
             router.refresh()
             toast.success("Signed out successfully")
         } catch (err) {
