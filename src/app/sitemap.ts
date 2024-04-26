@@ -1,7 +1,7 @@
 
 import type { MetadataRoute } from 'next';
 
-const URL = `https://newroom.io`;
+const URL = `https://genai.kecyi.com`;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 

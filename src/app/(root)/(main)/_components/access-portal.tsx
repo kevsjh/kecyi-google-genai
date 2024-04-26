@@ -47,22 +47,22 @@ export default function AccessPortalButton() {
 
     return <div className="flex flex-col gap-8">
         <Button
-            size={'lg'}
+            size={'sm'}
             variant={'default'}
             disabled={pendingAuthState}
             onClick={onClick}
-            className="text-center   rounded-lg font-medium text-lg  transform transition duration-200 
+            className="text-center   rounded-full   text-base transform transition duration-200 
         sm:hover:scale-110">
-            Client Portal
+            Access Client Portal
         </Button>
         <Button
-            variant={'secondary'}
-            size={'lg'}
+            variant={'outline'}
+            size={'sm'}
             disabled={pendingAuthState}
             onClick={onAdminClick}
-            className="text-center  text-primary rounded-lg font-medium text-lg  transform transition duration-200 
-        sm:hover:scale-110">
-            Admin Portal
+            className="text-center  text-primary   rounded-full   text-base transform transition duration-200 
+            sm:hover:scale-110">
+            Access Admin Portal
         </Button>
     </div>
 }

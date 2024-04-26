@@ -23,7 +23,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteConfig.url ?? 'https://newroom.io'),
+  metadataBase: new URL(siteConfig.url ?? 'https://genai.kecyi.com'),
   title: {
     default: siteConfig.name,
     template: `${siteConfig.name} %s`,

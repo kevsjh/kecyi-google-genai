@@ -1,38 +1,44 @@
 
 
-import StartDesignSection from "../_components/start-design-section";
-import CollectionShowcase from "../_components/collection-showcase";
-import UserReviewShowcase from "@/components/user-review-showcase";
-import { Badge } from "@/components/ui/badge";
-import { Star } from "@phosphor-icons/react/dist/ssr";
 
-import FeatureSection from "../_components/feature-section";
+import { ExternalLink } from "@/components/external-link";
 import AccessPortalButton from "../_components/access-portal";
+import { Badge } from "@/components/ui/badge";
 
 
 export default function Home() {
   return (
-    <main className=" flex w-full h-full  flex-col items-center justify-between ">
+    <main className=" flex w-full h-full  bg-black flex-col items-center justify-between ">
+      <div className=" bg-cover bg-blend-overlay bg-[url('/assets/hero.png')]   min-h-screen flex w-full h-full  items-center flex-col gap-8 ">
+        <div className="pt-36 space-y-4 px-4 sm:px-12 text-white drop-shadow-2xl max-w-screen-xl w-full">
 
-      <div className=" bg-cover bg-[url('/assets/hero.png')]  min-h-screen flex w-full h-full  flex-col gap-8 items-center">
-        <Badge className="border border-secondary font-medium text-sm flex gap-1 items-center">
-
-          Google Cloud GenAI APAC 2024
-
-        </Badge>
-        <div className="flex flex-col gap-4 pt-4 items-center">
-          <h1 className="tracking-wide leading-snug text-primary text-center text-4xl sm:text-5xl md:text-6xl font-medium">
-            Submission by <br /> <strong>KECYI</strong>
-            <br /> Google Cloud
-            <br />
-            GenAI APAC 2024
+          <Badge className="text-sm">Submission by team kecyi</Badge>
+          <h1 className="  tracking-wide  text-4xl md:text-5xl  lg:text-6xl font-bold text-white drop-shadow-2xl">
+            Next Gen AI Customer Service<br /> and Agent Based Assistant for <br />Banking & Financial Services
           </h1>
+          <p className="drop-shadow-2xl font-medium">This prototype project is built for Google Cloud GenAI Hackathon | APAC</p>
+          <div className="drop-shadow-md" >
+            Made with ❤️ by <ExternalLink
+              href="https://twitter.com/kevinsmjh"
+            ><span className="font-semibold">kevinsmjh</span></ExternalLink>
+
+          </div>
+          <div className="drop-shadow-md" >
+            Built with {' '}   <ExternalLink
+              href="https://cloud.google.com/?hl=en"> <span className="font-medium">
+                Google Cloud</span>  </ExternalLink>
+
+          </div>
+
+          <div className="w-fit">
+            <AccessPortalButton />
+          </div>
         </div>
-        <AccessPortalButton />
+
 
       </div>
 
 
-    </main>
+    </main >
   );
 }

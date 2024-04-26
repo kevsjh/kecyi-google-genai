@@ -174,7 +174,7 @@ function LoginForm({ setOpen, className }: {
             className={cn("grid items-start gap-4", className)}>
             <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input type="email" id="email" placeholder="newroom@example.com" />
+                <Input type="email" id="email" placeholder="genai@kecyi.com" />
             </div>
             <Button type="submit"
                 disabled={loading}
