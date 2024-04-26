@@ -1,6 +1,4 @@
 import { AppHeader } from "@/components/nav/app-header";
-import BottomFooter from "@/components/nav/bottom-footer";
-import TopNav from "@/components/nav/top-nav";
 import { Seal } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 
