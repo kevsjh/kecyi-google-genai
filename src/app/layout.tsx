@@ -72,7 +72,7 @@ export default function RootLayout({
             </ThemeProvider>
           </Providers>
         </AuthContextProvider>
-        {/* <TailwindIndicator /> */}
+        <TailwindIndicator />
         <Toaster richColors closeButton theme="light" />
       </body>
     </html>

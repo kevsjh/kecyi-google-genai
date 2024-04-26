@@ -116,7 +116,7 @@ export function AppHeader({ items }: {
   }[]
 }) {
   return (
-    <header className="sticky  border-b top-0 z-50 flex items-center justify-between w-full h-12 px-4 shrink-0 bg-transparent">
+    <header className="sticky  border-b top-0 z-50 flex items-center justify-between w-full h-12 px-4 shrink-0 bg-white">
       <div className="flex items-center">
         <React.Suspense fallback={<div className="flex-1 overflow-auto" />}>
           <div className='flex gap-2 items-center '>
