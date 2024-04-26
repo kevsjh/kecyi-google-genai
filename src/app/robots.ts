@@ -6,9 +6,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: '/profile/',
+
       },
     ],
-    sitemap: `https://newroom.io/sitemap.xml`,
+    sitemap: `https://genai.kecyi.com/sitemap.xml`,
   };
 }
