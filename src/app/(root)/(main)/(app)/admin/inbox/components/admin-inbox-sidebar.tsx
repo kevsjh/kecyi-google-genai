@@ -6,9 +6,10 @@ import React from 'react'
 import AdminInboxItem from './admin-inbox-item'
 
 
-export async function AdminInboxSidebar({ liveAgentDocs }: {
+export async function AdminInboxSidebar({ liveAgentDocs, panel }: {
 
   liveAgentDocs: ILiveAgentDoc[]
+  panel: 'admin' | 'client'
 
 }) {
   return (
@@ -21,6 +22,7 @@ export async function AdminInboxSidebar({ liveAgentDocs }: {
               id={liveAgentDoc.id}
               status={liveAgentDoc.status}
               summarizeChat={liveAgentDoc.summarizeChat}
+              panel={panel}
 
             />
           ))

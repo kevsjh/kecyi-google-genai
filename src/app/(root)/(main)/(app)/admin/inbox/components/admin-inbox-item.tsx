@@ -13,22 +13,23 @@ import { usePathname } from "next/navigation"
 import remarkGfm from "remark-gfm"
 import remarkMath from "remark-math"
 
-export default function AdminInboxItem({ id, status, summarizeChat }: {
+export default function AdminInboxItem({ id, status, summarizeChat, panel }: {
 
     id: string;
     status: 'pending' | 'ended' | 'active',
-    summarizeChat: string
+    summarizeChat: string,
+    panel: 'admin' | 'client'
 
 
 }) {
     const pathname = usePathname()
-    const isActive = pathname === `/admin/inbox/${id}`
+    const isActive = panel === 'admin' ? pathname === `/admin/inbox/${id}` : pathname === `/client/agent/liveagent/${id}`
 
     const { auth } = useAuthContext()
 
     return <Link
 
-        href={`/admin/inbox/${id}`}
+        href={panel === 'admin' ? `/admin/inbox/${id}` : `/client/agent/liveagent/${id}`}
         className={cn(
             // buttonVariants({ variant: 'ghost' }),
             'group items-center rounded-xl w-full px-3 transition-colors py-2  flex gap-2 overflow-hidden hover:bg-zinc-200/40 dark:hover:bg-zinc-300/10',
