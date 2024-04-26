@@ -5,10 +5,10 @@ import { getLiveAgentChats } from "@/lib/live-agent-actions/live-agent-actions";
 
 export default async function ClientRootLayout({
     children,
-    searchParams
+
 }: Readonly<{
     children: React.ReactNode;
-    searchParams: { [key: string]: string | string[] | undefined }
+
 }>) {
 
     const liveAgentDocs = await getLiveAgentChats()
