@@ -20,9 +20,9 @@ export const stockAgentSuggestionMessages = [
 
 export const customerServiceAgentSuggestionMessages = [
     {
-        heading: 'What are the ',
-        subheading: 'top credit cards',
-        message: 'What are the best credit cards in singapore'
+        heading: 'What are the coverage of',
+        subheading: 'travelsmart insurance',
+        message: 'What are the coverage of travelsmart insurance'
     },
     {
         heading: 'I want to purchase',
@@ -35,9 +35,9 @@ export const customerServiceAgentSuggestionMessages = [
 
 export const liveAgentCopilotSuggestionMessages = [
     {
-        heading: 'What does',
-        subheading: 'FWD insurance policy cover',
-        message: `What does FWD insurance policy cover`
+        heading: 'What are the coverage of',
+        subheading: 'travelsmart insurance',
+        message: 'What are the coverage of travelsmart insurance'
     },
     {
         heading: 'What are the ',

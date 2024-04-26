@@ -82,7 +82,7 @@ export async function convertWebURLPDF({
             objectId: objectId
         })
 
-        console.log('objectFullPath', objectFullPath)
+
 
         fs.unlinkSync(pdfFilePath);
 
