@@ -84,7 +84,10 @@ async function confirmPurchase(symbol: string, price: number, amount: number, nu
           </p>
         </div>
       )
+
+
       const { status, error } = await purchaseStockAction({ symbol, price, uid: session?.user.id, numberOfShares })
+
 
 
 
@@ -137,7 +140,6 @@ async function confirmPurchase(symbol: string, price: number, amount: number, nu
               defaultAmount: amount,
               status: status ? 'completed' : 'error',
               numberOfShares: amount,
-              purchaseStatus: status,
               purchaseError: error,
             }),
             display: {
@@ -149,7 +151,6 @@ async function confirmPurchase(symbol: string, price: number, amount: number, nu
                   defaultAmount: amount,
                   status: status ? 'completed' : 'error',
                   numberOfShares: amount,
-                  purchaseStatus: status,
                   purchaseError: error,
                 }
               }
@@ -483,10 +484,10 @@ async function submitUserMessage(content: string) {
             // model: googleCloudVertex.generativeAI('models/gemini-1.5-pro-preview-0409',
 
           ),
-          temperature: 0.1,
+          temperature: 0.2,
           tools: {
             trendingStocks: {
-              description: 'Useful to get trending stocks and financial stock information about the trending stock.',
+              description: 'Tool to get trending stocks and financial stock information about the trending stock.',
               parameters: z.object({
                 window: z.string().describe('Window for query, where 1D is 1 day, 5D is past 5 days, 1M is past 1 month, 6M, is past 6 months, YTD is past 1 year, 5Y is past 5 years and MAX is maximum. Default is "1D'),
               }),
@@ -547,7 +548,7 @@ async function submitUserMessage(content: string) {
               }),
             },
             showStockPurchase: {
-              description: 'Tool to show stock price and the UI for user to purchase a stock. Use this if the user wants to purchase or buy stock.',
+              description: 'Tool used to purchase stock, Show stock price and the UI for user to purchase a stock. Use this when user wants to buy stock.',
               parameters: z.object({
                 symbol: z
                   .string()
@@ -602,21 +603,20 @@ async function submitUserMessage(content: string) {
             },
           },
           system: `\
-          You are a stock trading assistant AI. Your role is to provide information and guidance to help users make informed decisions about buying and selling stocks.
+          You are a stock trading assistant AI.
           
-          You have access to real-time stock market data and can provide the latest prices, trends, and analysis for individual stocks or the overall market.
-          You also have access to help user to purchase and sell stocks. You may also route the user to the relevant agent based on their tasks.
+          You have tool access to real-time stock market data and can provide the latest prices, trends, and analysis for individual stocks or the overall market.
 
-          If the user wants to purchase or buy stocks, you should:
-            1. Check that you have the necessary information from previous messages, this includes the stock symbol, current price, and the number of shares the user wants to buy. If you have enough information, call the \`showStockPurchase\` function to display the stock purchase interface, allowing the user to review and confirm their order.
-            2. If you have all the required details, call the \`showStockPurchase\` function to display the stock purchase interface, allowing the user to review and confirm their order.
-            3. If you're missing any critical information, politely ask the user to provide the stock name or company name so that you can call the \`showStockData\` function and retrieve the necessary details.
-          
+          If the user wants to purchase stocks, you should:
+            1. Check if you have the necessary information from previous messages, this includes the stock symbol, the respective stock price, and optionally the number of shares the user wants to buy.
+            2. If you have all the required details, always make sure you call the \`showStockPurchase\` function tool which will display the stock purchase interface, allowing the user to review and confirm their order.
+            3. If you are missing any information, politely ask the user to provide the stock name or company name so that you can call the \`showStockData\` function.
+        
           If the user simply wants to view stock data or prices, call the \`showStockData\` function, which will display the current price and relevant information for the specified stock.
          
-          To showcase trending or popular stocks, call the \`trendingStocks\` function, which will provide a list of stocks that are currently experiencing significant trading volume or price movements.
+          If user wants to view trending or popular stocks, call the \`trendingStocks\` function, which will provide a list of stocks that are currently experiencing significant trading volume or price movements.
          
-          When the user view their stock portfolio, or wants to sell or short stocks, you should: 
+          If the user view their stock portfolio, or wants to sell or short stocks, you should: 
             1. Verify that you have the necessary information from previous messages, including the user entire stock portfolio, stock symbol, and the number of shares the user wants to sell. If you do not have the necessary information, call the \`showUserPortfolio\` function and retrieve the necessary details.
             2. If user want to sell a stock, check if the user own that stock in their portfolio, if they do not own that particular stock, inform them about it. 
             3. If the stock is available and you have the necessary details including symbol, stock price, and total shares owned from previous context or messages, call the \`showSellStock\` function to display the stock selling and shorting interface, allowing the user to review and confirm their action.
@@ -626,7 +626,6 @@ async function submitUserMessage(content: string) {
             2. Check if user needs to view, manage their bank account transaction, report fraud transaction and any related transactions, call the \`routeAgent\` function to route with the path '/client/transactions' and name 'Transactions'.
             3. Do not make up any agent, path or name, beyond the provided exact path and name.
 
-          Throughout the conversation, feel free to provide additional context, analysis, or recommendations based on your knowledge of the stock market.
 
           Do not make up any information if you are unsure.
 

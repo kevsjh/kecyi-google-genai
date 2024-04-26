@@ -118,7 +118,7 @@ export function Purchase({
           <button
             className="mt-6 w-full rounded-xl bg-green-400 px-4 py-2 font-bold text-white hover:bg-green-500"
             onClick={async () => {
-              const response = await confirmPurchase(symbol, price, value, numberOfShares)
+              const response = await confirmPurchase(symbol, price, value, value)
               setPurchasingUI(response.purchasingUI)
 
               // Insert a new system message to the UI.

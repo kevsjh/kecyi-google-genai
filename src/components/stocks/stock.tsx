@@ -27,7 +27,7 @@ interface IStock {
 export const stockSuggestions = [
   {
     title: 'Purchase Stock',
-    prompt: (stockSymbol: string) => `Purchase ${stockSymbol} stock`,
+    prompt: (stockSymbol: string, price: string) => `Purchase ${stockSymbol} stock, stock price is currently at $${price}.`,
   },
 
   {
@@ -106,7 +106,7 @@ export function Stock({ props: { symbol, price, delta, date, graph, news } }: {
               key={index}
               className="flex items-center shadow-md gap-2 px-3 py-2 text-sm transition-colors bg-zinc-50 hover:bg-zinc-100 rounded-xl cursor-pointer"
               onClick={async () => {
-                const response = await submitUserMessage(suggestion.prompt(symbol), [])
+                const response = await submitUserMessage(suggestion.prompt(symbol, price?.toString()), [])
                 setMessages((currentMessages: any[]) => [
                   ...currentMessages,
                   response

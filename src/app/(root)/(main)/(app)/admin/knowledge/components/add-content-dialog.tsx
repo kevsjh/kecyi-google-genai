@@ -156,6 +156,8 @@ export function AddContentDialog() {
             setLoading(true)
             const { status, error } = await loadWebURLAction({
                 webURL: url,
+                // TODO: change this to auth.currentUser.
+                // uid: 'all'
                 uid: auth.currentUser.uid
             })
             if (!status || error) {
@@ -236,7 +238,7 @@ export function AddContentDialog() {
     }
 
     const onSubmit = React.useCallback(() => {
-        console.log('submitting', inputURL)
+
         if (selectedTab === 'PDF') {
             handlePDFSubmit(selectedFile)
         } else {
