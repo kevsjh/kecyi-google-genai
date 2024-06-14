@@ -8,7 +8,6 @@ import { firebaseAdminFirestore, initFirebaseAdminApp } from '@/config/firebase-
 import { firestoreAutoId } from '../utils'
 import { redirect } from 'next/navigation'
 import { AgentChatTypeEnum } from '@/constant/enum'
-import { firebaseFirestore } from '@/config/firebase-config'
 
 initFirebaseAdminApp()
 
